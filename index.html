@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>뽁뽁이 10×10</title>
+<title>뽁뽁이</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -52,6 +52,21 @@ body{
   padding:calc(env(safe-area-inset-top,0px) + 20px) 22px 0;pointer-events:none}
 .brand{display:flex;flex-direction:column;gap:2px}
 .brand h1{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.help{position:relative;pointer-events:auto;margin-left:auto}
+.help summary{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;cursor:pointer;list-style:none;
+  color:var(--ink-2);background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.help summary::-webkit-details-marker{display:none}
+.help summary:hover,.help[open] summary{color:var(--ink);background:var(--seg-active)}
+.help summary:focus-visible{outline:2px solid var(--air);outline-offset:3px}
+.help summary svg{width:18px;height:18px}
+.help-panel{position:absolute;right:0;top:50px;width:264px;max-width:calc(100vw - 32px);padding:18px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
+.help-panel h2{margin:0 0 14px;font-size:13px;font-weight:500}
+.help-panel dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:12px 16px;font-size:12px;line-height:1.6}
+.help-panel dt{color:var(--ink);font-weight:500}
+.help-panel dd{margin:0;color:var(--ink-2)}
 .count{font-size:13.5px;color:var(--ink-2);font-weight:400;font-variant-numeric:tabular-nums}
 .count.total{font-size:12px;color:var(--ink-3)}
 .count b{font-weight:500;color:var(--ink);display:inline-block}
@@ -71,8 +86,6 @@ body{
 
 .bottom{position:fixed;isolation:isolate;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:14px;
   padding:0 16px calc(env(safe-area-inset-bottom,0px) + 22px);pointer-events:none}
-.hint{font-size:13.5px;color:var(--ink-2);text-align:center;max-width:36ch;line-height:1.55;transition:opacity .4s}
-.hint small{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
 .dock{pointer-events:auto;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;
   background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
   -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%)}
@@ -133,12 +146,12 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
 </style>
 </head>
 <body>
-<canvas id="scene" tabindex="0" aria-label="10×10 뽁뽁이 시트. 누르기 모드에서는 눌러서, 당기기 모드에서는 집어당겨서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바를 누르고 있으면 그 뽁뽁이를 누릅니다."></canvas>
+<canvas id="scene" tabindex="0" aria-label="뽁뽁이 시트. 누르기 모드에서는 눌러서, 당기기 모드에서는 집어당겨서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바를 누르고 있으면 그 뽁뽁이를 누릅니다."></canvas>
 <div class="fallback" id="fallback">이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.</div>
 
 <header class="top">
   <div class="brand">
-    <h1>뽁뽁이 10×10</h1>
+    <h1>뽁뽁이</h1>
     <div class="count"><b id="left">100</b>개 남음</div>
     <div class="count total">지금까지 <span id="count">0</span>개 터트림</div>
   </div>
@@ -146,11 +159,20 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
     <div class="meter" id="mP"><span>내부 압력</span><output id="vP">+0.0 kPa</output><div class="bar"><i id="bP"></i><u id="mkP" style="left:73%" title="이쯤에서 터져요"></u></div></div>
     <div class="meter" id="mS"><span>막 늘어남</span><output id="vS">0%</output><div class="bar"><i id="bS"></i><u style="left:26.7%" title="이 지점부터 다시 돌아오지 않아요"></u></div></div>
   </section>
+  <details class="help" id="help">
+    <summary aria-label="조작 안내" title="조작 안내"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.2"/><path d="M7.9 7.3a2.1 2.1 0 0 1 4.2 0c0 1.5-2.1 1.7-2.1 3.2"/><path d="M10 13.4h.01"/></svg></summary>
+    <div class="help-panel">
+      <h2>조작 안내</h2>
+      <dl>
+        <dt>회전</dt><dd>빈 곳을 누른 채 끌기</dd>
+        <dt>확대·축소</dt><dd>마우스 휠 또는<br>두 손가락을 벌리거나 모으기</dd>
+      </dl>
+    </div>
+  </details>
 </header>
 
 <footer class="bottom">
   <button class="renew" id="renew" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새 시트 깔기</button>
-  <p class="hint" id="hint" aria-live="polite"></p>
   <div class="tune" id="tune" hidden>
     <div class="tune-head"><label for="strength">터지는 강도</label><output id="vStr" for="strength">보통</output></div>
     <input type="range" id="strength" min="0" max="100" step="1" value="50">
@@ -169,6 +191,17 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
   </div>
 </footer>
 
+<script>
+const help=document.getElementById('help');
+addEventListener('pointerdown',event=>{if(!help.contains(event.target))help.open=false;});
+addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&help.open){
+    const hadFocus=help.contains(document.activeElement);
+    help.open=false;
+    if(hadFocus)help.querySelector('summary').focus();
+  }
+});
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // Soft-body bubble physics: XPBD membrane + Boyle gas + plasticity + rupture
@@ -788,17 +821,14 @@ function playCreak(amount){ // soft plastic squeak while stretching
 
 // ---------- UI ----------
 const $=id=>document.getElementById(id);
-const hintEl=$('hint'),renewBtn=$('renew'),seg=$('seg'),countEl=$('count'),leftEl=$('left');
+const renewBtn=$('renew'),seg=$('seg'),countEl=$('count'),leftEl=$('left');
 let count=0;try{count=parseInt(localStorage.getItem('bbk-count')||'0',10)||0;}catch(e){}
 countEl.textContent=count;
 let mode='press';
-const HINTS={press:'뽁뽁이를 꾹 누르고 있어 보세요',pull:'표면을 집어서 원하는 방향으로 끌어당겨 보세요'};
 function remaining(){let n=0;for(const c of cells)if(c.b&&!c.b.popped)n++;return n;}
 function updateUI(){
   const n=remaining();leftEl.textContent=n;
   renewBtn.classList.toggle('show',n===0);
-  if(n===0){hintEl.innerHTML='한 장을 다 터트렸어요';return;}
-  hintEl.innerHTML=HINTS[mode]+'<small>빈 곳을 끌면 돌려보고, 휠이나 두 손가락으로 확대해요</small>';
 }
 function setMode(m){mode=m;seg.dataset.mode=m;$('bPress').setAttribute('aria-pressed',m==='press');$('bPull').setAttribute('aria-pressed',m==='pull');updateUI();}
 $('bPress').onclick=()=>setMode('press');$('bPull').onclick=()=>setMode('pull');
@@ -900,7 +930,7 @@ let kSel={r:1,c:1},spaceDown=false;
 function kCell(){return cells[kSel.r*GRID+kSel.c];}
 addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT')return;
-  if(e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter'))return;
+  if(e.target.closest('button, summary')&&(e.code==='Space'||e.code==='Enter'))return;
   if(e.code==='KeyR'){resetSheet();}
   else if(e.code==='Digit1')setMode('press');
   else if(e.code==='KeyM')setSound(!soundOn);
