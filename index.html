@@ -901,7 +901,7 @@ function resetCell(cell,delay){
 }
 let focus=null;
 function resetSheet(){
-  endInteraction();press=null;
+  endInteraction();press=null;presses.clear();
   for(const c of cells)resetCell(c,reduceMotion?0:Math.hypot(c.x,c.z)*0.045+Math.random()*0.04);
   focus=null;updateUI();
 }
@@ -1017,6 +1017,7 @@ const pickables=[];for(const c of cells)pickables.push(c.front,c.back);
 function setRay(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,camera);}
 function pick(x,y){setRay(x,y);const h=ray.intersectObjects(pickables,false);for(const q of h){const c=q.object.userData.cell;if(c.inflateT>0.6)return {hit:q,cell:c};}return null;}
 let press=null, pull=null, orbit=null, pinch=null;
+const presses=new Map(); // Each clicked bubble finishes independently.
 const pointers=new Map();
 const WAKE_R=BR+FINGER_R+0.15;
 function nearCells(x,z){return cells.filter(c=>Math.hypot(c.x-x,c.z-z)<WAKE_R);}
@@ -1024,9 +1025,18 @@ function surfaceTop(x,z){const r=FINGER_R;let y0=r+0.015;
   for(const c of nearCells(x,z)){const b=c.b;const [lx,lz]=toLocal(c,x,z);for(let i=0;i<b.N;i++){const dx=b.pos[i*3]-lx,dz=b.pos[i*3+2]-lz,d2=dx*dx+dz*dz;if(d2<r*r){const y=b.pos[i*3+1]+Math.sqrt(r*r-d2)+0.012;if(y>y0)y0=y;}}}
   return y0;}
 function startPress(cell,wx,wz,sy){
+  if(cell.b.popped)return false;
+  if(press)press.active=false;
+  const pending=presses.get(cell);
+  if(pending){press=pending;press.active=true;focus=cell;return true;}
   let lx=wx-cell.x,lz=wz-cell.z;const rl=Math.hypot(lx,lz);if(rl>0.8){lx*=0.8/rl;lz*=0.8/rl;}
   const x=cell.x+lx,z=cell.z+lz;const y0=surfaceTop(x,z);
   press={x,z,y0,y:y0+0.25,hold:0,sy,dy:0,active:true,autoFinish:true,alpha:press?press.alpha:0,cell};focus=cell;
+  presses.set(cell,press);
+  return true;
+}
+function cancelPress(){
+  if(press){presses.delete(press.cell);press=null;}
 }
 function startPull(cell,local,worldPt){
   const b=cell.b;const rad=0.32;const ids=[],offs=[],w=[];
@@ -1053,11 +1063,11 @@ canvas.addEventListener('pointerdown',e=>{
   ensureAudio();canvas.focus({preventScroll:true});
   try{canvas.setPointerCapture(e.pointerId);}catch(_){}
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(pointers.size===2){endInteraction();press=null;orbit=null;const [a,b]=[...pointers.values()];pinch={d0:Math.hypot(a.x-b.x,a.y-b.y),dist0:cam.dist};return;}
+  if(pointers.size===2){endInteraction();cancelPress();orbit=null;const [a,b]=[...pointers.values()];pinch={d0:Math.hypot(a.x-b.x,a.y-b.y),dist0:cam.dist};return;}
   if(pointers.size>2)return;
   const p=pick(e.clientX,e.clientY);
   if(p){
-    if(mode==='press'){startPress(p.cell,p.hit.point.x,p.hit.point.z,e.clientY);press.pid=e.pointerId;}
+    if(mode==='press'){if(startPress(p.cell,p.hit.point.x,p.hit.point.z,e.clientY))press.pid=e.pointerId;}
     else{const local=p.cell.group.worldToLocal(p.hit.point.clone());if(startPull(p.cell,local,p.hit.point)){pull.pid=e.pointerId;canvas.classList.add('grabbing');}}
   } else orbit={pid:e.pointerId,x:e.clientX,y:e.clientY};
 });
@@ -1072,7 +1082,8 @@ canvas.addEventListener('pointermove',e=>{
 function up(e){pointers.delete(e.pointerId);
   if(pinch&&pointers.size<2)pinch=null;
   if(orbit&&orbit.pid===e.pointerId)orbit=null;
-  if((press&&press.pid===e.pointerId)||(pull&&pull.pid===e.pointerId))endInteraction();}
+  if((press&&press.pid===e.pointerId)||(pull&&pull.pid===e.pointerId))endInteraction();
+  if(e.type==='pointercancel'&&press&&press.pid===e.pointerId)cancelPress();}
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
 canvas.addEventListener('wheel',e=>{e.preventDefault();cam.dist=THREE.MathUtils.clamp(cam.dist*(1+e.deltaY*0.0012),ZMIN,ZMAX);},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1086,7 +1097,7 @@ addEventListener('keydown',e=>{
   else if(e.code==='Digit1')setMode('press');
   else if(e.code==='KeyM')setSound(!soundOn);
   else if(e.code.startsWith('Arrow')){e.preventDefault();const d={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.code];kSel.r=(kSel.r+d[0]+GRID)%GRID;kSel.c=(kSel.c+d[1]+GRID)%GRID;focus=kCell();kFlash=1;}
-  else if(e.code==='Space'&&!spaceDown&&!e.repeat){e.preventDefault();ensureAudio();spaceDown=true;const c=kCell();if(!press||!press.active){startPress(c,c.x,c.z,0);press.pid='key';}}
+  else if(e.code==='Space'&&!spaceDown&&!e.repeat){e.preventDefault();ensureAudio();spaceDown=true;const c=kCell();if(!press||!press.active){if(startPress(c,c.x,c.z,0))press.pid='key';}}
 });
 addEventListener('keyup',e=>{if(e.code==='Space'){spaceDown=false;if(press&&press.pid==='key')press.active=false;}});
 let kFlash=0;
@@ -1145,28 +1156,28 @@ let last=performance.now(), time=0, creakAcc=0;
 const SIMX=window.__SIMX||1;
 function simStep(dt){
   // presser control
-  let finger=null;
-  if(press){
+  const fingers=[];
+  for(const p of presses.values()){
     const bottom=FINGER_R+0.014;
     // once the bubble bursts the finger follows through to the sheet, even if released right then
-    if(!press.through&&press.cell.b.popped&&press.cell.b.time-press.cell.b.popTime<0.4&&press.y<press.y0+0.01)press.through=true;
-    const pressing=press.active||(press.autoFinish&&!press.cell.b.popped)||(press.through&&!press.throughDone);
+    if(!p.through&&p.cell.b.popped&&p.cell.b.time-p.cell.b.popTime<0.4&&p.y<p.y0+0.01)p.through=true;
+    const pressing=p.active||(p.autoFinish&&!p.cell.b.popped)||(p.through&&!p.throughDone);
     if(pressing){
-      press.hold+=dt;
-      let g=0;for(const c of nearCells(press.x,press.z)){if(!c.b.popped)g=Math.max(g,c.b.gauge/c.b.burst*1.3);}
-      const sv=strength/100;const want=Math.min(1.8,press.hold*(2.0-0.5*sv));
-      const target=press.through?bottom:Math.max(bottom,press.y0-want);
-      const approach=press.y>press.y0+0.002&&!press.through;
+      p.hold+=dt;
+      let g=0;for(const c of nearCells(p.x,p.z)){if(!c.b.popped)g=Math.max(g,c.b.gauge/c.b.burst*1.3);}
+      const sv=strength/100;const want=Math.min(1.8,p.hold*(2.0-0.5*sv));
+      const target=p.through?bottom:Math.max(bottom,p.y0-want);
+      const approach=p.y>p.y0+0.002&&!p.through;
       // approach only down to the surface, then press against the bubble's resistance
-      const sp=approach?10:press.through?7:(3.2-1.0*sv)/(1+Math.max(0,g)*(0.6+0.2*sv));
-      const tgt=approach?Math.max(target,press.y0):target;
-      press.tension=Math.max(0,g);
-      press.y+=THREE.MathUtils.clamp(tgt-press.y,-sp*dt,sp*dt);
-      press.alpha=Math.min(1,press.alpha+dt*5);
-      if(press.through&&press.y<=bottom+0.003){press.bottomT=(press.bottomT||0)+dt;if(press.bottomT>0.15)press.throughDone=true;}
-    }else{press.y+=dt*(2.5+(press.y-press.y0)*3);press.alpha-=dt*2.2;}
-    finger=press;
-    if(!pressing&&press.alpha<=0){press=null;finger=null;}
+      const sp=approach?10:p.through?7:(3.2-1.0*sv)/(1+Math.max(0,g)*(0.6+0.2*sv));
+      const tgt=approach?Math.max(target,p.y0):target;
+      p.tension=Math.max(0,g);
+      p.y+=THREE.MathUtils.clamp(tgt-p.y,-sp*dt,sp*dt);
+      p.alpha=Math.min(1,p.alpha+dt*5);
+      if(p.through&&p.y<=bottom+0.003){p.bottomT=(p.bottomT||0)+dt;if(p.bottomT>0.15)p.throughDone=true;}
+    }else{p.y+=dt*(2.5+(p.y-p.y0)*3);p.alpha-=dt*2.2;}
+    if(!pressing&&p.alpha<=0){presses.delete(p.cell);if(press===p)press=null;}
+    else fingers.push(p);
   }
   if(pull&&pull.cell.b.grab){
     pull.age+=dt;const g=pull.cell.b.grab;const k=1-Math.exp(-dt*16);
@@ -1175,8 +1186,11 @@ function simStep(dt){
   }
   for(const c of cells){
     const b=c.b;
-    const near=finger&&Math.hypot(finger.x-c.x,finger.z-c.z)<WAKE_R&&finger.y-FINGER_R<1.3;
-    if(near){const [lx,lz]=toLocal(c,finger.x,finger.z);b.finger={x:lx,y:finger.y,z:lz,r:FINGER_R,len:3};c.wakeUntil=time+1.6;}
+    let finger=null;
+    for(const candidate of fingers){
+      if(Math.hypot(candidate.x-c.x,candidate.z-c.z)<WAKE_R&&candidate.y-FINGER_R<1.3&&(!finger||candidate.y<finger.y))finger=candidate;
+    }
+    if(finger){const [lx,lz]=toLocal(c,finger.x,finger.z);b.finger={x:lx,y:finger.y,z:lz,r:FINGER_R,len:3};c.wakeUntil=time+1.6;}
     else b.finger=null;
     if(b.grab)c.wakeUntil=time+1.6;
     if(time<c.wakeUntil){
