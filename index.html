@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>뽁뽁이 10×10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-center:#EEF1F5; --bg-edge:#CBD2DC;
+  --ink:#1D2633; --ink-2:rgba(29,38,51,.58); --ink-3:rgba(29,38,51,.32);
+  --glass:rgba(255,255,255,.52); --glass-line:rgba(255,255,255,.75); --glass-shadow:0 10px 30px rgba(40,56,80,.12), 0 1px 0 rgba(255,255,255,.6) inset;
+  --seg-active:#FFFFFF; --air:#3E7BFA; --warn:#F0525A; --track:rgba(29,38,51,.12);
+  --fx-mist:#FFFFFF; --fx-ring:#FFFFFF; --fx-spark:#FFFFFF; --shadow-op:.20;
+  --env-top:#F7F9FC; --env-mid:#E3E7ED; --env-bottom:#CDD3DC; --box:3.0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg-center:#2A313C; --bg-edge:#151A21;
+    --ink:#E8EDF4; --ink-2:rgba(232,237,244,.62); --ink-3:rgba(232,237,244,.3);
+    --glass:rgba(34,41,52,.55); --glass-line:rgba(255,255,255,.10); --glass-shadow:0 10px 30px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.06) inset;
+    --seg-active:rgba(255,255,255,.14); --air:#7FA8FF; --warn:#FF7178; --track:rgba(255,255,255,.12);
+    --fx-mist:#CFE0FF; --fx-ring:#BFD4FF; --fx-spark:#FFFFFF; --shadow-op:.45;
+    --env-top:#5A6576; --env-mid:#262D38; --env-bottom:#10141A; --box:4.2;
+  }
+}
+:root[data-theme="dark"]{
+  --bg-center:#2A313C; --bg-edge:#151A21;
+  --ink:#E8EDF4; --ink-2:rgba(232,237,244,.62); --ink-3:rgba(232,237,244,.3);
+  --glass:rgba(34,41,52,.55); --glass-line:rgba(255,255,255,.10); --glass-shadow:0 10px 30px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.06) inset;
+  --seg-active:rgba(255,255,255,.14); --air:#7FA8FF; --warn:#FF7178; --track:rgba(255,255,255,.12);
+  --fx-mist:#CFE0FF; --fx-ring:#BFD4FF; --fx-spark:#FFFFFF; --shadow-op:.45;
+  --env-top:#5A6576; --env-mid:#262D38; --env-bottom:#10141A; --box:4.2;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;height:100%;overflow:hidden;background:var(--bg-edge);color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#scene.can-grab{cursor:grab} #scene.grabbing{cursor:grabbing} #scene.can-press{cursor:pointer}
+
+.top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 22px 0;pointer-events:none}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand h1{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.count{font-size:13.5px;color:var(--ink-2);font-weight:400;font-variant-numeric:tabular-nums}
+.count.total{font-size:12px;color:var(--ink-3)}
+.count b{font-weight:500;color:var(--ink);display:inline-block}
+.count b.bump{animation:bump .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.5)}100%{transform:scale(1)}}
+
+.meters{width:min(220px,44vw);display:flex;flex-direction:column;gap:12px;padding:14px 16px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%)}
+.meter{display:grid;grid-template-columns:1fr auto;row-gap:6px;font-size:12.5px}
+.meter span{color:var(--ink-2)}
+.meter output{font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+.bar{grid-column:1/-1;position:relative;height:3px;border-radius:3px;background:var(--track);overflow:visible}
+.bar i{position:absolute;inset:0;border-radius:3px;background:var(--air);transform-origin:left center;transform:scaleX(0)}
+.bar u{position:absolute;top:-3px;width:1px;height:9px;background:var(--ink-3)}
+.meter.hot output{color:var(--warn)} .meter.hot .bar i{background:var(--warn)}
+
+.bottom{position:fixed;isolation:isolate;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:14px;
+  padding:0 16px calc(env(safe-area-inset-bottom,0px) + 22px);pointer-events:none}
+.hint{font-size:13.5px;color:var(--ink-2);text-align:center;max-width:36ch;line-height:1.55;transition:opacity .4s}
+.hint small{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
+.dock{pointer-events:auto;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%)}
+.seg{position:relative;display:flex;border-radius:999px}
+.seg .knob{position:absolute;top:0;bottom:0;left:0;width:50%;border-radius:999px;background:var(--seg-active);
+  box-shadow:0 2px 8px rgba(30,45,70,.12);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.seg[data-mode="pull"] .knob{transform:translateX(100%)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.seg button{position:relative;z-index:1;display:flex;white-space:nowrap;align-items:center;gap:7px;height:42px;padding:0 18px;border-radius:999px;
+  font-size:14px;font-weight:500;color:var(--ink-2);transition:color .25s}
+.seg button[aria-pressed="true"]{color:var(--ink)}
+.seg svg,.icon svg{width:18px;height:18px;flex:none}
+.sep{width:1px;height:22px;background:var(--track);margin:0 2px}
+.icon{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2);transition:background .2s,color .2s}
+.icon:hover,.seg button:hover{color:var(--ink)}
+.icon:hover{background:var(--track)}
+.tune{pointer-events:auto;width:min(320px,calc(100vw - 32px));padding:14px 16px 12px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);
+  position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
+  opacity:0;visibility:hidden;transform:translateY(8px) scale(.97);transition:opacity .25s,transform .35s cubic-bezier(.3,1.4,.5,1),visibility .25s}
+.tune.open{opacity:1;visibility:visible;transform:none}
+.tune-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:10px}
+.tune-head label{font-weight:500}
+.tune-head output{color:var(--ink-2);font-variant-numeric:tabular-nums;font-size:12.5px}
+.tune-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-top:8px}
+#strength{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer;--p:50%}
+#strength::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(to right,var(--air) var(--p),var(--track) var(--p))}
+#strength::-moz-range-track{height:4px;border-radius:4px;background:var(--track)}
+#strength::-moz-range-progress{height:4px;border-radius:4px;background:var(--air)}
+#strength::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;margin-top:-8px;background:#fff;border:0;box-shadow:0 1px 4px rgba(20,30,50,.3),0 0 0 1px rgba(20,30,50,.06)}
+#strength::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px rgba(20,30,50,.3)}
+#strength:focus-visible{outline:none}
+#strength:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--air)}
+.icon[aria-expanded="true"]{background:var(--track);color:var(--ink)}
+.renew{pointer-events:auto;height:46px;padding:0 22px;border-radius:999px;font-size:14.5px;font-weight:500;color:#fff;background:var(--air);
+  box-shadow:0 8px 24px color-mix(in srgb,var(--air) 40%,transparent);display:flex;align-items:center;gap:8px;
+  opacity:0;transform:translateY(8px) scale(.96);transition:opacity .35s,transform .45s cubic-bezier(.3,1.4,.5,1);visibility:hidden}
+.renew.show{opacity:1;transform:none;visibility:visible}
+.renew svg{width:17px;height:17px}
+button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.fallback{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:24px;font-size:15px;color:var(--ink-2)}
+
+@media (max-width:520px){
+  .top{padding-left:16px;padding-right:16px}
+  .meters{padding:11px 13px;gap:10px}
+  .seg button{padding:0 12px;gap:5px}
+  .dock{gap:2px;padding:5px}
+  .icon{width:38px;height:38px}
+  .seg button{height:40px}
+  .seg button .lbl{font-size:13.5px}
+}
+@media (prefers-reduced-motion: reduce){
+  .seg .knob,.renew,.count b.bump{transition:none;animation:none}
+}
+</style>
+</head>
+<body>
+<canvas id="scene" tabindex="0" aria-label="10×10 뽁뽁이 시트. 누르기 모드에서는 눌러서, 당기기 모드에서는 집어당겨서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바를 누르고 있으면 그 뽁뽁이를 누릅니다."></canvas>
+<div class="fallback" id="fallback">이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.</div>
+
+<header class="top">
+  <div class="brand">
+    <h1>뽁뽁이 10×10</h1>
+    <div class="count"><b id="left">100</b>개 남음</div>
+    <div class="count total">지금까지 <span id="count">0</span>개 터트림</div>
+  </div>
+  <section class="meters" hidden aria-label="마지막으로 만진 뽁뽁이 상태">
+    <div class="meter" id="mP"><span>내부 압력</span><output id="vP">+0.0 kPa</output><div class="bar"><i id="bP"></i><u id="mkP" style="left:73%" title="이쯤에서 터져요"></u></div></div>
+    <div class="meter" id="mS"><span>막 늘어남</span><output id="vS">0%</output><div class="bar"><i id="bS"></i><u style="left:26.7%" title="이 지점부터 다시 돌아오지 않아요"></u></div></div>
+  </section>
+</header>
+
+<footer class="bottom">
+  <button class="renew" id="renew" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새 시트 깔기</button>
+  <p class="hint" id="hint" aria-live="polite"></p>
+  <div class="tune" id="tune" hidden>
+    <div class="tune-head"><label for="strength">터지는 강도</label><output id="vStr" for="strength">보통</output></div>
+    <input type="range" id="strength" min="0" max="100" step="1" value="50">
+    <div class="tune-ends"><span>살짝 눌러도 톡</span><span>꾹 눌러야 펑</span></div>
+  </div>
+  <div class="dock">
+    <div class="seg" id="seg" hidden data-mode="press" role="group" aria-label="터트리는 방법">
+      <span class="knob"></span>
+      <button type="button" id="bPress" aria-pressed="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5v7M7 6.8 10 9.8l3-3"/><path d="M3 17.5h14"/><path d="M5.5 17.5c0-3 2-4.6 4.5-4.6s4.5 1.6 4.5 4.6"/></svg><span class="lbl">누르기</span></button>
+      <button type="button" id="bPull" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10V2.8M7 5.6l3-3 3 3"/><path d="M3 17.5h14"/><path d="M5.5 17.5c0-3 2-6.2 4.5-6.2s4.5 3.2 4.5 6.2"/></svg><span class="lbl">당기기</span></button>
+    </div>
+    <span class="sep" hidden></span>
+    <button class="icon" type="button" id="bTune" hidden aria-label="터지는 강도" aria-expanded="false" aria-controls="tune" title="터지는 강도"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 6h7M14.5 6h2M3.5 14h2M9.5 14h7"/><circle cx="12.5" cy="6" r="2"/><circle cx="7.5" cy="14" r="2"/></svg></button>
+    <button class="icon" type="button" id="bSound" aria-label="소리 끄기" aria-pressed="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h3l4-3.5v12l-4-3.5h-3z"/><path class="w" d="M13.5 7.2a4 4 0 0 1 0 5.6M15.6 5a7 7 0 0 1 0 10"/><path class="x" d="M13.5 8l4 4M17.5 8l-4 4" style="display:none"/></svg></button>
+    <button class="icon" type="button" id="bReset" aria-label="새 시트 깔기" title="새 시트 깔기 (R)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.5A6.5 6.5 0 1 0 16.5 10"/><path d="M16 2.8v3.9h-3.9"/></svg></button>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Soft-body bubble physics: XPBD membrane + Boyle gas + plasticity + rupture
+function createBubble(opts){
+  const P = Object.assign({
+    R:1, H:0.76, NR:14, mass:0.01, topR:0.86, fillet:0.13, fill:1.0, crown:0.045,
+    Patm:10.0, Pg0:0.06, burstGauge:1.15, burstJitter:0.08,
+    compliance:0.47, compCompress:6.0, bendCompliance:3,
+    postBend:8, postComp:6, collapse:1.2, collapseTau:0.11, postGravity:10, lockAfter:0.40,
+    bendYield:0.02, bendCreep:1.2, postBendCreep:8, burstSet:0.95,
+    damping:55, velocityDrag:30, substeps:20,
+    yieldStrain:0.12, creepRate:1.7, ruptureStrain:0.48, ruptureTotal:1.8, freeRuptureStrain:0.33, freeRuptureTotal:1.42,
+    crackStrain:0.14, compYield:0.06,
+    leakTau:0.007,
+  }, opts||{});
+  const {R,H,NR}=P;
+  // Thermoformed air cell: a mostly flat circular lid, rounded rim, and upright cylindrical wall.
+  // Multiple profile samples keep the shoulder smooth without turning the whole cell into a hemisphere.
+  const prof=[];
+  const lid=R*0.76, shoulder=R*0.13;
+  const steps=160;
+  for(let k=0;k<=steps;k++){
+    const u=k/steps;
+    prof.push([lid*u,H+P.crown*(1-u*u)*(1-u*u)]);
+  }
+  // Quarter-rounded lip from the top film into the cylindrical side.
+  for(let k=1;k<=steps;k++){
+    const a=Math.PI/2-(Math.PI/2)*k/steps;
+    prof.push([lid+shoulder*Math.cos(a),H-shoulder+shoulder*Math.sin(a)]);
+  }
+  // Nearly vertical skirt, slightly flared into the perimeter's heat seal.
+  for(let k=1;k<=steps;k++){
+    const u=k/steps;
+    prof.push([lid+shoulder+(R-lid-shoulder)*Math.pow(u,3),
+      (H-shoulder)*(1-u)]);
+  }
+  const arc=[0];
+  for(let k=1;k<prof.length;k++){const dx=prof[k][0]-prof[k-1][0],dy=prof[k][1]-prof[k-1][1];arc.push(arc[k-1]+Math.hypot(dx,dy));}
+  const Stot=arc[arc.length-1];
+  function atArc(s){let lo=0,hi=arc.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(arc[m]<s)lo=m;else hi=m;}const f=(s-arc[lo])/((arc[hi]-arc[lo])||1);return [prof[lo][0]+(prof[hi][0]-prof[lo][0])*f,prof[lo][1]+(prof[hi][1]-prof[lo][1])*f];}
+  const verts=[]; const rings=[];
+  for(let i=0;i<=NR;i++){
+    const ring=[];
+    if(i===0){ring.push(verts.length);verts.push([0,prof[0][1],0]);}
+    else{
+      let [r,y]=atArc(Stot*i/NR); if(i===NR){r=R;y=0;}
+      const n=6*i;
+      for(let j=0;j<n;j++){const a=2*Math.PI*j/n + (i%2?0:Math.PI/n*0); ring.push(verts.length);verts.push([r*Math.cos(a),y,r*Math.sin(a)]);}
+    }
+    rings.push(ring);
+  }
+  const tris=[];
+  // fan
+  for(let j=0;j<6;j++) tris.push([rings[0][0],rings[1][j],rings[1][(j+1)%6]]);
+  for(let i=2;i<=NR;i++){
+    const A=rings[i-1],B=rings[i],na=A.length,nb=B.length;let a=0,b=0;
+    while(a<na||b<nb){
+      const ta=(a+1)/na, tb=(b+1)/nb;
+      if(b>=nb || (a<na && ta<tb)){tris.push([A[a%na],A[(a+1)%na],B[b%nb]]);a++;}
+      else {tris.push([A[a%na],B[(b+1)%nb],B[b%nb]]);b++;}
+    }
+  }
+  const N=verts.length;
+  const pos=new Float32Array(N*3), vel=new Float32Array(N*3), prev=new Float32Array(N*3), rest=new Float32Array(N*3);
+  const invMass=new Float32Array(N), pinned=new Uint8Array(N);
+  for(let i=0;i<N;i++){pos[i*3]=verts[i][0];pos[i*3+1]=verts[i][1];pos[i*3+2]=verts[i][2];}
+  rest.set(pos);
+  const m=P.mass/N;
+  for(const v of rings[NR]) pinned[v]=1;
+  for(let i=0;i<N;i++) invMass[i]=pinned[i]?0:1/m;
+  // orient triangles outward
+  const T=tris.length; const tri=new Uint32Array(T*3);
+  for(let t=0;t<T;t++){
+    let [a,b,c]=tris[t];
+    const ax=pos[a*3],ay=pos[a*3+1],az=pos[a*3+2];
+    const e1=[pos[b*3]-ax,pos[b*3+1]-ay,pos[b*3+2]-az], e2=[pos[c*3]-ax,pos[c*3+1]-ay,pos[c*3+2]-az];
+    const n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const cx=(ax+pos[b*3]+pos[c*3])/3,cy=(ay+pos[b*3+1]+pos[c*3+1])/3,cz=(az+pos[b*3+2]+pos[c*3+2])/3;
+    if(n[0]*cx+n[1]*(cy+0.3)+n[2]*cz<0){const tmp=b;b=c;c=tmp;}
+    tri[t*3]=a;tri[t*3+1]=b;tri[t*3+2]=c;
+  }
+  // edges
+  const emap=new Map(); const edges=[]; const triEdges=new Int32Array(T*3);
+  const edgeTris=[];
+  function ek(a,b){return a<b?a*100000+b:b*100000+a;}
+  for(let t=0;t<T;t++){for(let k=0;k<3;k++){const a=tri[t*3+k],b=tri[t*3+(k+1)%3];const key=ek(a,b);let id=emap.get(key);if(id===undefined){id=edges.length;emap.set(key,id);edges.push([Math.min(a,b),Math.max(a,b)]);edgeTris.push([]);}triEdges[t*3+k]=id;edgeTris[id].push(t);}}
+  const E=edges.length;
+  const eA=new Uint32Array(E),eB=new Uint32Array(E),eL0=new Float32Array(E),eLorig=new Float32Array(E),eBroken=new Uint8Array(E),eLen=new Float32Array(E);
+  for(let e=0;e<E;e++){const [a,b]=edges[e];eA[e]=a;eB[e]=b;const L=Math.hypot(pos[a*3]-pos[b*3],pos[a*3+1]-pos[b*3+1],pos[a*3+2]-pos[b*3+2]);eL0[e]=L;eLorig[e]=L;eLen[e]=L;}
+  // bending: opposite vertices across edges
+  const bA=[],bB=[],bL=[],bE=[];
+  for(let e=0;e<E;e++){const ts=edgeTris[e];if(ts.length!==2)continue;const o=[];for(const t of ts){for(let k=0;k<3;k++){const v=tri[t*3+k];if(v!==eA[e]&&v!==eB[e])o.push(v);}}
+    const a=o[0],b=o[1];bA.push(a);bB.push(b);bE.push(e);bL.push(Math.hypot(pos[a*3]-pos[b*3],pos[a*3+1]-pos[b*3+1],pos[a*3+2]-pos[b*3+2]));}
+  const BN=bA.length; const bAa=Uint32Array.from(bA),bBa=Uint32Array.from(bB),bLa=Float32Array.from(bL),bEa=Uint32Array.from(bE);
+  const triAlive=new Uint8Array(T).fill(1);
+  const contactT=new Float32Array(N).fill(-1);
+  const force=new Float32Array(N*3);
+  function volume(){let V=0;for(let t=0;t<T;t++){const a=tri[t*3]*3,b=tri[t*3+1]*3,c=tri[t*3+2]*3;
+    V+=pos[a]*(pos[b+1]*pos[c+2]-pos[b+2]*pos[c+1])-pos[a+1]*(pos[b]*pos[c+2]-pos[b+2]*pos[c])+pos[a+2]*(pos[b]*pos[c+1]-pos[b+1]*pos[c]);}return V/6;}
+  const V0=volume();
+  const state={P,N,T,E,pos,vel,prev,rest,invMass,pinned,tri,triAlive,edges,eA,eB,eL0,eLorig,eBroken,eLen,triEdges,
+    V0, V:V0, gas:P.Patm*V0, gauge:0, popped:false, popTime:0, popPoint:null, popReason:'', popEnergy:0,
+    maxStrain:0, maxPlastic:0, crackBudget:0, time:0, lastPressTime:-10, events:[],
+    finger:null, // {x,y,z,r,len}
+    grab:null,   // {ids:[], offs:Float32Array, target:[x,y,z], squeeze}
+    trisDirty:false, rings, NR, loose:[], tips:null, burst:P.burstGauge*(1+(Math.random()*2-1)*P.burstJitter), contactT,
+  };
+  function applyPressure(){
+    force.fill(0);
+    const dp=state.gauge;
+    if(Math.abs(dp)<1e-6) return;
+    const s=dp/6;
+    for(let t=0;t<T;t++){ if(!triAlive[t]) continue;
+      const a=tri[t*3]*3,b=tri[t*3+1]*3,c=tri[t*3+2]*3;
+      const e1x=pos[b]-pos[a],e1y=pos[b+1]-pos[a+1],e1z=pos[b+2]-pos[a+2];
+      const e2x=pos[c]-pos[a],e2y=pos[c+1]-pos[a+1],e2z=pos[c+2]-pos[a+2];
+      const nx=(e1y*e2z-e1z*e2y)*s,ny=(e1z*e2x-e1x*e2z)*s,nz=(e1x*e2y-e1y*e2x)*s;
+      force[a]+=nx;force[a+1]+=ny;force[a+2]+=nz;force[b]+=nx;force[b+1]+=ny;force[b+2]+=nz;force[c]+=nx;force[c+1]+=ny;force[c+2]+=nz;
+    }
+  }
+  function solveEdges(dt){
+    const at=P.compliance/(dt*dt), atc=P.compCompress*(state.popped&&!state.locked?P.postComp:1)/(dt*dt);
+    for(let e=0;e<E;e++){ if(eBroken[e]) continue;
+      const a=eA[e]*3,b=eB[e]*3;const wa=invMass[eA[e]],wb=invMass[eB[e]];const w=wa+wb;if(w===0)continue;
+      const dx=pos[a]-pos[b],dy=pos[a+1]-pos[b+1],dz=pos[a+2]-pos[b+2];const L=Math.sqrt(dx*dx+dy*dy+dz*dz);if(L<1e-9)continue;
+      const C=L-eL0[e]; const alpha=(C<0?atc:at)*eL0[e]/0.1; // compliance scaled by length
+      const dl=-C/(w+alpha); const k=dl/L;
+      pos[a]+=dx*k*wa;pos[a+1]+=dy*k*wa;pos[a+2]+=dz*k*wa;pos[b]-=dx*k*wb;pos[b+1]-=dy*k*wb;pos[b+2]-=dz*k*wb;
+    }
+  }
+  function solveBend(dt){
+    const at=P.bendCompliance*(state.popped&&!state.locked?P.postBend:1)/(dt*dt);
+    for(let i=0;i<BN;i++){ if(eBroken[bEa[i]]) continue;
+      const ia=bAa[i],ib=bBa[i];const a=ia*3,b=ib*3;const wa=invMass[ia],wb=invMass[ib],w=wa+wb;if(w===0)continue;
+      const dx=pos[a]-pos[b],dy=pos[a+1]-pos[b+1],dz=pos[a+2]-pos[b+2];const L=Math.sqrt(dx*dx+dy*dy+dz*dz);if(L<1e-9)continue;
+      const C=L-bLa[i];const dl=-C/(w+at);const k=dl/L;
+      pos[a]+=dx*k*wa;pos[a+1]+=dy*k*wa;pos[a+2]+=dz*k*wa;pos[b]-=dx*k*wb;pos[b+1]-=dy*k*wb;pos[b+2]-=dz*k*wb;
+    }
+  }
+  function collide(){
+    const f=state.finger; const thick=0.012;
+    for(let i=0;i<N;i++){ if(pinned[i]) continue; const o=i*3;
+      if(f){ // capsule: segment from (x,y,z) to (x,y+len,z), radius r
+        let cy=pos[o+1]; let sy=Math.min(Math.max(cy,f.y),f.y+f.len);
+        const dx=pos[o]-f.x,dy=cy-sy,dz=pos[o+2]-f.z; const d2=dx*dx+dy*dy+dz*dz; const rr=f.r+thick;
+        if(d2<rr*rr){const d=Math.sqrt(d2)||1e-6; const k=rr/d; pos[o]=f.x+dx*k; pos[o+1]=sy+dy*k; pos[o+2]=f.z+dz*k; contactT[i]=state.time;}
+      }
+      if(pos[o+1]<thick*0.5){pos[o+1]=thick*0.5; }
+    }
+    // Under a press the sealed air compresses (Boyle's law) and the unpinned
+    // skirt bulges naturally. Do not add radial displacement each substep:
+    // an unbounded artificial push made the film tear before it filled out.
+    const g=state.grab;
+    if(g){ for(let k=0;k<g.ids.length;k++){const o=g.ids[k]*3;const wgt=g.w[k];
+      const tx=g.target[0]+g.offs[k*3]*g.squeeze,ty=g.target[1]+g.offs[k*3+1]*g.squeeze,tz=g.target[2]+g.offs[k*3+2]*g.squeeze;
+      pos[o]+= (tx-pos[o])*wgt; pos[o+1]+=(ty-pos[o+1])*wgt; pos[o+2]+=(tz-pos[o+2])*wgt; } }
+  }
+  function substep(dt){
+    if(state.finger)state.lastPressTime=state.time;
+    // gas
+    state.V=Math.max(volume(),0.04*V0);
+    if(state.popped){ // leak
+      const pabs=state.gas/state.V; const k=1-Math.exp(-dt/P.leakTau);
+      state.gas+= (P.Patm-pabs)*state.V*k;
+    }
+    state.gauge=state.gas/state.V-P.Patm;
+    if(state.popped){ const age=state.time-state.popTime; state.gauge-=P.collapse*Math.exp(-age/P.collapseTau); }
+    applyPressure();
+    const damp=Math.exp(-P.damping*dt);
+    for(let i=0;i<N;i++){ const w=invMass[i]; if(w===0) continue; const o=i*3;
+      vel[o]=(vel[o]+dt*force[o]*w)*damp; vel[o+1]=(vel[o+1]+dt*(force[o+1]*w-(state.popped&&!state.locked?P.postGravity:1.0)))*damp; vel[o+2]=(vel[o+2]+dt*force[o+2]*w)*damp;
+      prev[o]=pos[o];prev[o+1]=pos[o+1];prev[o+2]=pos[o+2];
+      pos[o]+=dt*vel[o];pos[o+1]+=dt*vel[o+1];pos[o+2]+=dt*vel[o+2];
+    }
+    solveEdges(dt); solveBend(dt); collide();
+    const id=1/dt;
+    for(let i=0;i<N;i++){ if(invMass[i]===0) continue; const o=i*3;
+      const postDamp=Math.exp(-P.velocityDrag*dt);
+      vel[o]=(pos[o]-prev[o])*id*postDamp;vel[o+1]=(pos[o+1]-prev[o+1])*id*postDamp;vel[o+2]=(pos[o+2]-prev[o+2])*id*postDamp; }
+  }
+  function breakEdge(e){ if(eBroken[e]) return; eBroken[e]=1; for(const t of edgeTris[e]){ if(triAlive[t]){triAlive[t]=0;state.trisDirty=true;} } }
+  const vEdges=Array.from({length:N},()=>[]);
+  for(let e=0;e<E;e++){vEdges[eA[e]].push(e);vEdges[eB[e]].push(e);}
+  function triNormalAtEdge(e){const ts=edgeTris[e];const t=ts[0];const a=tri[t*3]*3,b=tri[t*3+1]*3,c=tri[t*3+2]*3;
+    const e1x=pos[b]-pos[a],e1y=pos[b+1]-pos[a+1],e1z=pos[b+2]-pos[a+2],e2x=pos[c]-pos[a],e2y=pos[c+1]-pos[a+1],e2z=pos[c+2]-pos[a+2];
+    let nx=e1y*e2z-e1z*e2y,ny=e1z*e2x-e1x*e2z,nz=e1x*e2y-e1y*e2x;const l=Math.hypot(nx,ny,nz)||1;return [nx/l,ny/l,nz/l];}
+  function isolate(v){ if(pinned[v]) return; for(const e of vEdges[v]) breakEdge(e); state.loose.push(v); }
+  function rupture(e, reason){
+    const a=eA[e]*3,b=eB[e]*3;
+    state.popped=true; state.popTime=state.time; state.popReason=reason;
+    const mx=(pos[a]+pos[b])/2,my=(pos[a+1]+pos[b+1])/2,mz=(pos[a+2]+pos[b+2])/2;
+    state.popPoint=[mx,my,mz]; state.popGauge=state.gauge;
+    state.popStretch=Math.max(state.maxTotal||0,Math.hypot(pos[a]-pos[b],pos[a+1]-pos[b+1],pos[a+2]-pos[b+2])/eLorig[e]-1);
+    let dx=pos[b]-pos[a],dy=pos[b+1]-pos[a+1],dz=pos[b+2]-pos[a+2];const dl=Math.hypot(dx,dy,dz)||1;dx/=dl;dy/=dl;dz/=dl;
+    const n=triNormalAtEdge(e); state.popNormal=n;
+    // A compressed membrane snaps back sharply as the pressure vanishes.
+    const recoil=Math.min(2.5,0.6+Math.max(0,state.gauge)*0.9);
+    for(let v=0;v<N;v++){
+      if(pinned[v])continue;
+      const o=v*3,rr=Math.hypot(pos[o],pos[o+2])||1;
+      const outward=Math.max(0.1,1-Math.abs(pos[o+1]-H*0.45)/H);
+      vel[o]-=pos[o]/rr*recoil*outward;
+      vel[o+1]-=0.3*recoil;
+      vel[o+2]-=pos[o+2]/rr*recoil*outward;
+    }
+    let cx=dy*n[2]-dz*n[1],cy=dz*n[0]-dx*n[2],cz=dx*n[1]-dy*n[0];const cl=Math.hypot(cx,cy,cz)||1;cx/=cl;cy/=cl;cz/=cl;
+    const g=Math.min(Math.max(state.gauge,0),2);
+    const len=0.22+g*0.3+Math.random()*0.08+(state.grab?0.3:0); // a pulled film rips further
+    const start=pinned[eA[e]]?eB[e]:eA[e];
+    state.visited=new Set([start]);
+    breakEdge(e); isolate(start);
+    // the burst sets the film into the shape it was squeezed into
+    for(let i=0;i<BN;i++){const p=bAa[i]*3,q=bBa[i]*3;const L=Math.hypot(pos[p]-pos[q],pos[p+1]-pos[q+1],pos[p+2]-pos[q+2]);bLa[i]+=(L-bLa[i])*P.burstSet;}
+    for(let k=0;k<E;k++){const p=eA[k]*3,q=eB[k]*3;const L=Math.hypot(pos[p]-pos[q],pos[p+1]-pos[q+1],pos[p+2]-pos[q+2]);if(!eBroken[k])eL0[k]+=(L-eL0[k])*P.burstSet;}
+    state.tips=[{v:start,d:[cx,cy,cz],rem:len},{v:start,d:[-cx,-cy,-cz],rem:len*(0.55+Math.random()*0.5)}];
+    state.events.push({type:'pop',point:state.popPoint,normal:n,gauge:state.gauge,reason});
+  }
+  function advanceCracks(){
+    if(!state.tips) return;
+    for(const tp of state.tips){ if(tp.rem<=0) continue;
+      const v=tp.v; let best=-1e9,bu=-1,bl=0,bdx=0,bdy=0,bdz=0;
+      for(const e of vEdges[v]){ const u=eA[e]===v?eB[e]:eA[e]; if(state.visited.has(u)) continue;
+        let dx=pos[u*3]-pos[v*3],dy=pos[u*3+1]-pos[v*3+1],dz=pos[u*3+2]-pos[v*3+2];const l=Math.hypot(dx,dy,dz)||1;dx/=l;dy/=l;dz/=l;
+        const sc=dx*tp.d[0]+dy*tp.d[1]+dz*tp.d[2]+(Math.random()-0.5)*0.55;
+        if(sc>best){best=sc;bu=u;bl=l;bdx=dx;bdy=dy;bdz=dz;} }
+      if(bu<0||pinned[bu]||best<-0.2){tp.rem=0;continue;}
+      state.visited.add(bu); isolate(bu);
+      let nx=tp.d[0]*0.75+bdx*0.25,ny=tp.d[1]*0.75+bdy*0.25,nz=tp.d[2]*0.75+bdz*0.25;const nl=Math.hypot(nx,ny,nz)||1;tp.d=[nx/nl,ny/nl,nz/nl];
+      tp.v=bu; tp.rem-=bl;
+    }
+  }
+  function materialUpdate(dt){
+    let maxS=0,maxEl=0,maxP=0,maxT=0,argE=-1,freeMax=-1,freeE=-1;
+    for(let e=0;e<E;e++){ if(eBroken[e]) continue;
+      const a=eA[e]*3,b=eB[e]*3; const L=Math.hypot(pos[a]-pos[b],pos[a+1]-pos[b+1],pos[a+2]-pos[b+2]); eLen[e]=L;
+      const el=L/eL0[e]-1; const tot=L/eLorig[e];
+      // plastic creep in tension
+      if(el>P.yieldStrain){ eL0[e]+= (L/(1+P.yieldStrain)-eL0[e])*Math.min(1,P.creepRate*dt); }
+      // compression yielding (crumple memory)
+      if(el<-P.compYield){ eL0[e]+= (L/(1-P.compYield)-eL0[e])*Math.min(1,P.creepRate*0.6*dt); }
+      const el2=L/eL0[e]-1;
+      if(el2>maxEl){maxEl=el2;argE=e;}
+      const pl=eL0[e]/eLorig[e]-1; if(pl>maxP)maxP=pl; if(tot-1>maxT)maxT=tot-1;
+      if(!state.popped){
+        const inContact=(state.time-contactT[eA[e]]<0.05)||(state.time-contactT[eB[e]]<0.05);
+        if(!inContact&&el2>freeMax){freeMax=el2;freeE=e;}
+        // film squeezed under the finger is supported, so it tolerates more; free film tears sooner
+        const rS=inContact?P.ruptureStrain:P.freeRuptureStrain, rT=inContact?P.ruptureTotal:P.freeRuptureTotal;
+        // During a normal press the gas, not an isolated mesh edge, governs rupture.
+        // Keep the strain-based tearing behavior for the existing pull interaction.
+        const freeToTear=!state.finger && (state.grab||state.time-(state.lastPressTime||-10)>0.22);
+        if(freeToTear&&el2>rS){ rupture(e,'strain'); }
+        else if(freeToTear&&tot>rT){ rupture(e,'stretch'); }
+      }
+    }
+    state.maxStrain=maxEl; state.maxPlastic=maxP;
+    // once the air is out and the film has settled, it keeps that deflated shape
+    if(state.popped&&!state.locked&&state.time-state.popTime>P.lockAfter){state.locked=true;
+      for(let k=0;k<E;k++){if(eBroken[k])continue;eL0[k]=eLen[k];}
+      for(let i=0;i<BN;i++){const p=bAa[i]*3,q=bBa[i]*3;bLa[i]=Math.hypot(pos[p]-pos[q],pos[p+1]-pos[q+1],pos[p+2]-pos[q+2]);}}
+    // bending plasticity: a firm film keeps the shape it was pushed into
+    const bc=Math.min(1,(state.popped?P.postBendCreep:P.bendCreep)*dt), by=P.bendYield;
+    for(let i=0;i<BN;i++){ if(eBroken[bEa[i]]) continue; const a=bAa[i]*3,b=bBa[i]*3;
+      const L=Math.hypot(pos[a]-pos[b],pos[a+1]-pos[b+1],pos[a+2]-pos[b+2]); const r=bLa[i];
+      if(L>r*(1+by)) bLa[i]+=(L/(1+by)-r)*bc; else if(L<r*(1-by)) bLa[i]+=(L/(1-by)-r)*bc; }
+    state.maxTotal=maxT;
+    // Keep the clear cylinder intact through the visible inflation phase.
+    // Once enough air is compressed and the skirt is visibly distended,
+    // failure is instantaneous rather than a gradual crack in the top film.
+    const f=state.finger;
+    if(!state.popped&&f&&freeE>=0){
+      const depth=Math.max(0,Math.min(1,(H-(f.y-f.r))/H));
+      const readiness=0.52+0.032*Math.min(1.8,state.burst/P.burstGauge);
+      const criticalPressure=Math.max(0.52,state.burst*1.3);
+      // Final compression also provides a hard stop for weakened films.
+      if((depth>readiness&&state.gauge>criticalPressure)||
+         (depth>0.87&&state.gauge>0.12)) rupture(freeE,'pressure');
+    }
+  }
+  function step(frameDt){
+    if(!(frameDt>1e-5)) return; const n=P.substeps; const dt=Math.min(frameDt,1/30)/n;
+    for(let s=0;s<n;s++){ substep(dt); state.time+=dt; if(state.tips && (s%5===0)) advanceCracks(); }
+    materialUpdate(Math.min(frameDt,1/30));
+  }
+  state.step=step;
+  // sealed with only part of the formed volume filled: let the air out gently until it sits at P.fill
+  state.settle=function(frames){const b0=state.burst;state.burst=1e9;const g0=P.Patm*V0;
+    for(let i=0;i<frames;i++){const u=Math.min(1,i/(frames*0.7));state.gas=g0*(1-(1-P.fill)*u*u*(3-2*u));step(1/60);}
+    state.burst=b0;state.events.length=0;};
+  state.bendRest=bLa;
+  // restore a used bubble to a template's settled state without rebuilding its mesh
+  state.resetFrom=function(t){
+    pos.set(t.pos);prev.set(t.pos);vel.fill(0);eL0.set(t.eL0);eLen.set(t.eLen);bLa.set(t.bendRest);
+    eBroken.fill(0);triAlive.fill(1);contactT.fill(-1);
+    Object.assign(state,{gas:t.gas,V:t.V,gauge:t.gauge,popped:false,popTime:0,popPoint:null,popReason:'',popGauge:undefined,popStretch:undefined,
+      locked:false,tips:null,loose:[],visited:null,time:0,lastPressTime:-10,events:[],finger:null,grab:null,trisDirty:true,
+      maxStrain:t.maxStrain,maxTotal:t.maxTotal||0,maxPlastic:t.maxPlastic||0,burst:P.burstGauge*(1+(Math.random()*2-1)*P.burstJitter)});
+  }; state.volume=volume; state.breakEdge=breakEdge;
+  state.vertexStrain=function(out){ // plastic per vertex for whitening
+    out.fill(0); for(let e=0;e<E;e++){const pl=eL0[e]/eLorig[e]-1; const el=eLen[e]/eL0[e]-1; const v=Math.max(0,pl*1.0)+Math.max(0,el)*0.3; if(v>out[eA[e]])out[eA[e]]=v; if(v>out[eB[e]])out[eB[e]]=v;} };
+  return state;
+}
+
+
+</script>
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('scene');
+if(typeof THREE==='undefined'){document.getElementById('fallback').style.display='grid';return;}
+let renderer;
+try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'}); }
+catch(e){ document.getElementById('fallback').style.display='grid'; return; }
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(30,1,0.1,400);
+const cam={theta:0.55,phi:0.52,dist:7.0,target:new THREE.Vector3(0,0.12,0)};
+
+// ---------- theme ----------
+const css=()=>getComputedStyle(document.documentElement);
+function lin(hex){return new THREE.Color(hex.trim()).convertSRGBToLinear();}
+let theme={};
+function readTheme(){
+  const s=css();
+  const g=k=>s.getPropertyValue(k).trim();
+  theme={bgC:g('--bg-center'),bgE:g('--bg-edge'),mist:g('--fx-mist'),ring:g('--fx-ring'),spark:g('--fx-spark'),
+    shadowOp:parseFloat(g('--shadow-op'))||0.2,envTop:g('--env-top'),envMid:g('--env-mid'),envBottom:g('--env-bottom'),box:parseFloat(g('--box'))||3,
+    dark:g('--bg-edge').toLowerCase()==='#151a21'};
+}
+// background gradient texture
+const bgCanvas=document.createElement('canvas');bgCanvas.width=bgCanvas.height=512;
+const bgTex=new THREE.CanvasTexture(bgCanvas);bgTex.encoding=THREE.sRGBEncoding;
+function paintBg(){
+  const c=bgCanvas.getContext('2d');const gr=c.createRadialGradient(256,230,10,256,256,400);
+  gr.addColorStop(0,theme.bgC);gr.addColorStop(1,theme.bgE);c.fillStyle=gr;c.fillRect(0,0,512,512);
+  // fine noise to avoid banding
+  const im=c.getImageData(0,0,512,512);for(let i=0;i<im.data.length;i+=4){const n=(Math.random()-0.5)*3;im.data[i]+=n;im.data[i+1]+=n;im.data[i+2]+=n;}c.putImageData(im,0,0);
+  bgTex.needsUpdate=true; scene.background=bgTex;
+}
+
+// ---------- environment (studio cube map) ----------
+const isGL2=renderer.capabilities.isWebGL2;
+const cubeRT=new THREE.WebGLCubeRenderTarget(256,{type:isGL2?THREE.HalfFloatType:THREE.UnsignedByteType,generateMipmaps:false,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+const cubeCam=new THREE.CubeCamera(0.1,100,cubeRT);
+const envScene=new THREE.Scene();
+const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,toneMapped:false,depthWrite:false,
+  uniforms:{top:{value:new THREE.Color()},mid:{value:new THREE.Color()},bot:{value:new THREE.Color()}},
+  vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform vec3 top,mid,bot;varying vec3 vP;void main(){float y=vP.y;vec3 c=y>0.?mix(mid,top,pow(y,0.6)):mix(mid,bot,pow(-y,0.5));gl_FragColor=vec4(c,1.);}'});
+envScene.add(new THREE.Mesh(new THREE.SphereGeometry(50,32,16),skyMat));
+const boxMats=[];
+function softbox(w,h,pos,int){
+  const m=new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false,side:THREE.DoubleSide});m.userData.int=int;boxMats.push(m);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);mesh.position.copy(pos);mesh.lookAt(0,0,0);envScene.add(mesh);
+}
+softbox(14,9,new THREE.Vector3(-16,22,14),1.0);   // key, upper left front
+softbox(4,22,new THREE.Vector3(24,10,-8),0.7);    // tall strip right
+softbox(18,5,new THREE.Vector3(4,30,-6),0.55);    // top band
+softbox(6,6,new THREE.Vector3(10,6,22),0.35);     // small fill
+let pmrem=new THREE.PMREMGenerator(renderer);let envPM=null;
+function buildEnv(){
+  skyMat.uniforms.top.value=lin(theme.envTop);skyMat.uniforms.mid.value=lin(theme.envMid);skyMat.uniforms.bot.value=lin(theme.envBottom);
+  for(const m of boxMats){const v=theme.box*m.userData.int*(isGL2?1:0.4);m.color.setRGB(v,v,v*1.02);}
+  cubeCam.update(renderer,envScene);
+  if(envPM) envPM.dispose();
+  envPM=pmrem.fromCubemap(cubeRT.texture).texture; scene.environment=envPM;
+}
+
+// ---------- lights ----------
+const hemi=new THREE.HemisphereLight(0xffffff,0x8a94a3,0.55);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffffff,1.25);sun.position.set(-3.2,7.5,3.0);
+scene.add(sun);
+const lightDir=sun.position.clone().normalize();
+const flash=new THREE.PointLight(0xdfe9ff,0,5,2);scene.add(flash);
+
+// ---------- grid layout ----------
+const GRID=10, SP=2.35, BR=1.0;
+cam.dist=50; cam.target.set(0,-0.6,0.6); cam.phi=0.85;
+const ZMIN=6, ZMAX=90;
+
+function radialTex(stops,size=256){const c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d');const g=x.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);for(const [o,col] of stops)g.addColorStop(o,col);x.fillStyle=g;x.fillRect(0,0,size,size);return new THREE.CanvasTexture(c);}
+
+// ---------- film sheet ----------
+// honeycomb sheet: rows staggered by half a pitch, rows packed at sqrt(3)/2 pitch
+const ROWP=SP*Math.sqrt(3)/2;
+const FW=(GRID-1)*SP+SP/2+2*BR+0.75, FD=(GRID-1)*ROWP+2*BR+0.75, FR=0.7;
+const shape=new THREE.Shape();{const w=FW/2,h=FD/2;shape.moveTo(-w+FR,-h);shape.lineTo(w-FR,-h);shape.quadraticCurveTo(w,-h,w,-h+FR);shape.lineTo(w,h-FR);shape.quadraticCurveTo(w,h,w-FR,h);shape.lineTo(-w+FR,h);shape.quadraticCurveTo(-w,h,-w,h-FR);shape.lineTo(-w,-h+FR);shape.quadraticCurveTo(-w,-h,-w+FR,-h);}
+const filmGeo=new THREE.ExtrudeGeometry(shape,{depth:0.014,bevelEnabled:true,bevelThickness:0.003,bevelSize:0.005,bevelSegments:2,curveSegments:20});
+filmGeo.rotateX(-Math.PI/2);filmGeo.translate(0,-0.014,0);
+const filmMat=new THREE.MeshPhysicalMaterial({color:0xf3f7fc,roughness:0.12,metalness:0,clearcoat:1,clearcoatRoughness:0.08,transparent:true,opacity:0.42,envMapIntensity:1.1,depthWrite:false});
+const film=new THREE.Mesh(filmGeo,filmMat);film.renderOrder=1;scene.add(film);
+const filmShadow=new THREE.Mesh(new THREE.PlaneGeometry(FW*1.45,FD*1.45),new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(25,35,50,0.16)'],[0.5,'rgba(25,35,50,0.11)'],[0.7,'rgba(25,35,50,0.03)'],[1,'rgba(25,35,50,0)']]),transparent:true,depthWrite:false,toneMapped:false}));
+filmShadow.rotation.x=-Math.PI/2;filmShadow.position.y=-0.022;filmShadow.renderOrder=0;scene.add(filmShadow);
+// heat-seal rings, merged into one mesh
+const sealMat=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:0.45,transparent:true,opacity:0.28,depthWrite:false,envMapIntensity:0.9});
+const sealParts=[];
+const contactTex=radialTex([[0,'rgba(20,30,45,0.55)'],[0.45,'rgba(20,30,45,0.22)'],[1,'rgba(20,30,45,0)']]);
+const causticTex=radialTex([[0,'rgba(255,255,255,0.9)'],[0.18,'rgba(255,255,255,0.35)'],[0.55,'rgba(255,255,255,0.10)'],[0.8,'rgba(255,255,255,0.32)'],[0.9,'rgba(255,255,255,0.06)'],[1,'rgba(255,255,255,0)']]);
+
+// ---------- bubble cells ----------
+const sharedU={uEnv:{value:cubeRT.texture},uLight:{value:lightDir},uGain:{value:1}};
+const bubbleVS=`attribute float aStrain;varying vec3 vN;varying vec3 vW;varying float vS;
+void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vN=normalize(mat3(modelMatrix)*normal);vS=aStrain;gl_Position=projectionMatrix*viewMatrix*w;}`;
+const bubbleFS=`uniform samplerCube uEnv;uniform vec3 uLight;uniform float uPop;uniform float uTension;uniform float uGain;varying vec3 vN;varying vec3 vW;varying float vS;
+vec3 film(float d){return 0.5+0.5*cos(6.28318*(d*vec3(1.0,1.09,1.19)+vec3(0.0,0.33,0.67)));}
+void main(){
+  vec3 V=normalize(cameraPosition-vW);vec3 N=normalize(vN);
+  if(!gl_FrontFacing)N=-N;
+  float NdV=clamp(dot(N,V),0.,1.);
+  float F=0.04+0.96*pow(1.-NdV,5.);
+  vec3 env=textureCube(uEnv,reflect(-V,N)).rgb*uGain;
+  float s=clamp(vS,0.,1.5);
+  vec3 iri=film(0.9+s*2.0+NdV*0.6);
+  float iriAmt=clamp((s-0.03)*0.9,0.,0.32);
+  vec3 refl=pow(env,vec3(0.4545))*mix(vec3(1.),0.55+iri*0.6,iriAmt);
+  vec3 H=normalize(uLight+V);float nh=max(dot(N,H),0.);
+  float tight=smoothstep(0.18,1.0,uTension);
+  float spec=pow(nh,320.)*(3.0+2.2*tight)+pow(nh,48.)*(0.10+0.17*tight);
+  float whiten=smoothstep(0.10,0.65,s);
+  float rim=pow(1.-NdV,3.);
+  vec3 pm=refl*F*(0.92+0.28*tight)+vec3(spec)+vec3(0.93,0.96,1.0)*whiten*0.36+vec3(0.94,0.97,1.0)*tight*rim*0.38+vec3(0.80,0.90,1.0)*uPop*rim*0.9+vec3(0.017,0.019,0.022);
+  float a=0.07+F+whiten*0.36+uPop*rim*0.45+pow(1.-NdV,2.)*(0.14+0.13*tight);
+  gl_FragColor=vec4(min(pm,vec3(1.)),clamp(a,0.,1.));
+}`;
+// ---------- presser (fingertip) + pinch tips ----------
+const FINGER_R=1.4; // a fingertip pad is wider than one bubble
+const presserUniforms={uEnv:{value:cubeRT.texture},uLight:{value:lightDir},uTipY:{value:1},uAlpha:{value:0},uBody:{value:new THREE.Color(0.36,0.41,0.5)}};
+const presserMat=new THREE.ShaderMaterial({uniforms:presserUniforms,transparent:true,depthWrite:false,toneMapped:false,premultipliedAlpha:true,
+  vertexShader:'varying vec3 vW;varying vec3 vN;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vN=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*viewMatrix*w;}',
+  fragmentShader:`uniform samplerCube uEnv;uniform vec3 uLight;uniform float uTipY;uniform float uAlpha;uniform vec3 uBody;varying vec3 vW;varying vec3 vN;
+  void main(){vec3 V=normalize(cameraPosition-vW);vec3 N=normalize(vN);float NdV=clamp(dot(N,V),0.,1.);float F=0.04+0.96*pow(1.-NdV,5.);
+   float dif=0.7+0.3*max(dot(N,uLight),0.);vec3 body=uBody*dif;
+   vec3 env=textureCube(uEnv,reflect(-V,N)).rgb;vec3 H=normalize(uLight+V);float sp=pow(max(dot(N,H),0.),90.)*0.6;
+   vec3 col=mix(body,env,F*0.8)+sp;col*=1.-smoothstep(0.45,0.0,NdV)*0.18;
+   float fade=1.-smoothstep(uTipY+0.15,uTipY+1.7,vW.y);
+   float a=(0.5+F*0.4)*fade*uAlpha;
+   gl_FragColor=vec4(LinearTosRGB(vec4(min(col,vec3(1.)),1.)).rgb*a,a);
+  }`});
+const presser=new THREE.Group();
+{const tip=new THREE.Mesh(new THREE.SphereGeometry(FINGER_R,64,40,0,Math.PI*2,Math.PI*0.5,Math.PI*0.5),presserMat);
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(FINGER_R,FINGER_R,3,64,1,true),presserMat);body.position.y=1.5;
+ tip.renderOrder=body.renderOrder=4;presser.add(tip,body);}
+const presserShadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(20,30,45,0.5)'],[0.5,'rgba(20,30,45,0.2)'],[1,'rgba(20,30,45,0)']]),transparent:true,depthWrite:false,toneMapped:false,opacity:0}));
+presserShadow.rotation.x=-Math.PI/2;presserShadow.position.y=0.0035;presserShadow.renderOrder=1;scene.add(presserShadow);
+presser.visible=false;scene.add(presser);
+const tipUniforms={uEnv:{value:cubeRT.texture},uLight:{value:lightDir},uTipY:{value:50},uAlpha:{value:0},uBody:null};
+tipUniforms.uBody=presserUniforms.uBody;
+const tipMat=presserMat.clone();tipMat.uniforms=tipUniforms;
+const tipGeo=new THREE.SphereGeometry(0.13,32,20);
+const tipA=new THREE.Mesh(tipGeo,tipMat),tipB=new THREE.Mesh(tipGeo,tipMat);tipA.renderOrder=tipB.renderOrder=4;
+tipA.visible=tipB.visible=false;scene.add(tipA,tipB);
+
+// ---------- particles ----------
+const ptVS=`attribute float aA;attribute float aS;attribute float aSeed;uniform float uScale;varying float vA;varying float vSeed;
+void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=aS*uScale/-mv.z;gl_Position=projectionMatrix*mv;vA=aA;vSeed=aSeed;}`;
+const mistFS=`uniform vec3 uColor;varying float vA;varying float vSeed;void main(){vec2 p=gl_PointCoord-0.5;float d=length(p)*2.;if(d>1.)discard;
+ float m=pow(1.-d,2.2)*(0.85+0.15*sin(vSeed*40.+p.x*9.));gl_FragColor=vec4(uColor,m*vA);
+ gl_FragColor.rgb=min(gl_FragColor.rgb,vec3(1.));
+ #include <encodings_fragment>
+}`;
+const sparkFS=`uniform vec3 uColor;uniform float uTime;varying float vA;varying float vSeed;void main(){vec2 p=gl_PointCoord-0.5;float d=length(p);
+ float core=exp(-d*d*90.);float tw=0.6+0.4*sin(uTime*38.+vSeed*60.);
+ float rays=(exp(-abs(p.y)*55.)*exp(-abs(p.x)*7.)+exp(-abs(p.x)*55.)*exp(-abs(p.y)*7.))*0.8*tw;
+ float a=(core+rays)*vA;gl_FragColor=vec4(uColor*(1.+core*0.6),a);
+ gl_FragColor.rgb=min(gl_FragColor.rgb,vec3(1.));
+ #include <encodings_fragment>
+}`;
+function makeSystem(cap,fs,blend){
+  const g=new THREE.BufferGeometry();const p=new Float32Array(cap*3),a=new Float32Array(cap),s=new Float32Array(cap),sd=new Float32Array(cap);
+  g.setAttribute('position',new THREE.BufferAttribute(p,3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aA',new THREE.BufferAttribute(a,1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aS',new THREE.BufferAttribute(s,1).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute('aSeed',new THREE.BufferAttribute(sd,1).setUsage(THREE.DynamicDrawUsage));
+  const m=new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color(1,1,1)},uScale:{value:500},uTime:{value:0}},vertexShader:ptVS,fragmentShader:fs,transparent:true,depthWrite:false,blending:blend,toneMapped:false});
+  const pts=new THREE.Points(g,m);pts.frustumCulled=false;pts.renderOrder=6;scene.add(pts);
+  return {cap,g,p,a,s,sd,m,pts,list:[]};
+}
+const mist=makeSystem(260,mistFS,THREE.NormalBlending);
+const spark=makeSystem(260,sparkFS,THREE.AdditiveBlending);
+function emit(sys,o){if(sys.list.length>=sys.cap)sys.list.shift();sys.list.push(o);}
+function updateSystem(sys,dt,t){
+  const L=sys.list;let n=0;
+  for(let i=L.length-1;i>=0;i--){const q=L[i];q.age+=dt;if(q.age>=q.life){L.splice(i,1);continue;}}
+  for(const q of L){
+    const k=Math.exp(-q.drag*dt);q.vx*=k;q.vy*=k;q.vz*=k;q.vy+=q.grav*dt;
+    q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;if(q.y<0.01){q.y=0.01;q.vy*=-0.3;q.vx*=0.7;q.vz*=0.7;}
+    const u=q.age/q.life;
+    sys.p[n*3]=q.x;sys.p[n*3+1]=q.y;sys.p[n*3+2]=q.z;
+    sys.a[n]=q.alpha*(u<0.08?u/0.08:Math.pow(1-u,q.fade));
+    sys.s[n]=q.s0+(q.s1-q.s0)*(1-Math.pow(1-u,2));sys.sd[n]=q.seed;n++;
+  }
+  sys.g.setDrawRange(0,n);
+  for(const k of ['position','aA','aS','aSeed'])sys.g.attributes[k].needsUpdate=true;
+  sys.m.uniforms.uTime.value=t;
+}
+
+const PHYS={NR:16,substeps:16,compliance:0.30,compCompress:7.5,burstGauge:1.05,ruptureStrain:0.62,freeRuptureStrain:0.48};
+const template=createBubble(PHYS);template.settle(65);
+function freshBubble(prev){
+  const b=prev||createBubble(PHYS);b.resetFrom(template);
+  return b;
+}
+const cells=[];
+function makeCell(r,c){
+  const x=(c-(GRID-1)/2)*SP+(r%2?SP/4:-SP/4), z=(r-(GRID-1)/2)*ROWP;
+  const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+  const uPop={value:0},uTension={value:0},uFacet={value:0};
+  const mk=side=>new THREE.ShaderMaterial({uniforms:{uEnv:sharedU.uEnv,uLight:sharedU.uLight,uGain:sharedU.uGain,uPop,uTension},vertexShader:bubbleVS,fragmentShader:bubbleFS,transparent:true,depthWrite:false,side,toneMapped:false,premultipliedAlpha:true});
+  const geo=new THREE.BufferGeometry();
+  const back=new THREE.Mesh(geo,mk(THREE.BackSide)),front=new THREE.Mesh(geo,mk(THREE.FrontSide));
+  back.frustumCulled=front.frustumCulled=false;group.add(back,front);
+  const contact=new THREE.Mesh(new THREE.PlaneGeometry(3.2,3.2),new THREE.MeshBasicMaterial({map:contactTex,transparent:true,depthWrite:false,toneMapped:false}));
+  contact.rotation.x=-Math.PI/2;contact.position.set(x,0.002,z);contact.renderOrder=1;scene.add(contact);
+  const caustic=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.7),new THREE.MeshBasicMaterial({map:causticTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.5,color:0xfff6ea}));
+  caustic.rotation.x=-Math.PI/2;caustic.position.y=0.003;caustic.renderOrder=1;scene.add(caustic);
+  const ring=new THREE.RingGeometry(BR,BR+0.13,72);ring.rotateX(-Math.PI/2);ring.translate(x,0.0015,z);sealParts.push(ring);
+  const cell={r,c,x,z,group,geo,back,front,uPop,uTension,uFacet,contact,caustic,b:null,posAttr:null,strainAttr:null,strainBuf:null,inflateT:1,delay:0,wakeUntil:0,dirtyMesh:true,top:0.76};
+  back.userData.cell=front.userData.cell=cell;
+  cells.push(cell);return cell;
+}
+for(let r=0;r<GRID;r++)for(let c=0;c<GRID;c++)makeCell(r,c);
+{const merged=mergeGeos(sealParts);const seal=new THREE.Mesh(merged,sealMat);seal.renderOrder=1;scene.add(seal);}
+function mergeGeos(list){let n=0,ni=0;for(const g of list){n+=g.attributes.position.count;ni+=g.index.count;}
+  const p=new Float32Array(n*3),nm=new Float32Array(n*3),idx=new Uint32Array(ni);let o=0,oi=0;
+  for(const g of list){p.set(g.attributes.position.array,o*3);nm.set(g.attributes.normal.array,o*3);const I=g.index.array;for(let k=0;k<I.length;k++)idx[oi+k]=I[k]+o;o+=g.attributes.position.count;oi+=I.length;}
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(p,3));m.setAttribute('normal',new THREE.BufferAttribute(nm,3));m.setIndex(new THREE.BufferAttribute(idx,1));return m;}
+function toLocal(c,wx,wz){const dx=wx-c.x,dz=wz-c.z;return [dx*c.cr-dz*c.sr,dx*c.sr+dz*c.cr];}
+function rebuildIndex(cell){const b=cell.b;const idx=[];for(let t=0;t<b.T;t++)if(b.triAlive[t])idx.push(b.tri[t*3],b.tri[t*3+1],b.tri[t*3+2]);cell.geo.setIndex(idx);b.trisDirty=false;}
+function resetCell(cell,delay){
+  cell.b=freshBubble(cell.b);const b=cell.b;
+  // Draw the same soft body through a fast temporal low-pass; simulate on b.pos.
+  // This removes contact chatter without delaying the actual pressure calculation.
+  cell.posAttr=new THREE.BufferAttribute(new Float32Array(b.pos),3).setUsage(THREE.DynamicDrawUsage);cell.geo.setAttribute('position',cell.posAttr);
+  cell.strainBuf=new Float32Array(b.N);cell.strainAttr=new THREE.BufferAttribute(cell.strainBuf,1).setUsage(THREE.DynamicDrawUsage);cell.geo.setAttribute('aStrain',cell.strainAttr);
+  rebuildIndex(cell);cell.geo.computeVertexNormals();cell.geo.computeBoundingSphere();
+  b.vertexStrain(cell.strainBuf);
+  cell.jit=b.burst/b.P.burstGauge;b.burst=cell.jit*BURST;
+  // each bubble sits at a random turn so the soft, under-filled tops don't all sag alike
+  cell.rot=Math.random()*Math.PI*2;cell.cr=Math.cos(cell.rot);cell.sr=Math.sin(cell.rot);cell.group.rotation.y=cell.rot;
+  cell.inflateT=0;cell.delay=delay;cell.wakeUntil=0;cell.uPop.value=0;cell.uTension.value=0;cell.uFacet.value=0;cell.dirtyMesh=true;
+}
+let focus=null;
+function resetSheet(){
+  endInteraction();press=null;
+  for(const c of cells)resetCell(c,reduceMotion?0:Math.hypot(c.x,c.z)*0.045+Math.random()*0.04);
+  focus=null;updateUI();
+}
+
+// ---------- shockwave ring pool ----------
+const ringFS=`uniform float uT;uniform vec3 uColor;uniform float uAlpha;uniform float uR0;varying vec2 vUv;
+void main(){vec2 p=(vUv-0.5)*2.;float r=length(p);float e=1.-pow(1.-uT,3.);float R=mix(uR0,1.,e);float w=mix(0.010,0.05,uT);
+ float band=exp(-pow((r-R)/w,2.));float inner=smoothstep(R,R*0.55,r)*smoothstep(R*0.2,R*0.6,r)*0.18;
+ float a=(band*0.85+inner)*pow(1.-uT,1.6)*uAlpha;gl_FragColor=vec4(uColor,a);
+ #include <encodings_fragment>
+}`;
+const ringColor={value:new THREE.Color(1,1,1)};
+const rings=[];
+for(let i=0;i<8;i++){const m=new THREE.ShaderMaterial({uniforms:{uT:{value:1},uColor:ringColor,uAlpha:{value:0},uR0:{value:0.22}},
+  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:ringFS,transparent:true,depthWrite:false,toneMapped:false});
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(9,9),m);mesh.rotation.x=-Math.PI/2;mesh.position.y=0.006+i*0.0004;mesh.renderOrder=5;mesh.visible=false;scene.add(mesh);
+  rings.push({mesh,m,t:1,dur:1,delay:0,alpha:0});}
+let ringIx=0;
+function fireRings(x,z,g){
+  for(let i=0;i<2;i++){const r=rings[ringIx++%rings.length];r.mesh.position.x=x;r.mesh.position.z=z;r.t=0;r.delay=i*0.017;r.dur=i?0.32:0.20;r.alpha=(i?0.18:0.34)*Math.min(1,0.5+g*0.38);r.mesh.scale.setScalar(i?0.45:0.33);r.mesh.visible=true;}
+}
+// ---------- air shell pool ----------
+const shellColor={value:new THREE.Color(1,1,1)};
+const shellGeo=new THREE.SphereGeometry(1,48,32);
+const shells=[];
+for(let i=0;i<4;i++){const m=new THREE.ShaderMaterial({uniforms:{uA:{value:0},uColor:shellColor},transparent:true,depthWrite:false,toneMapped:false,premultipliedAlpha:true,side:THREE.DoubleSide,
+  vertexShader:'varying vec3 vW;varying vec3 vN;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vN=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*viewMatrix*w;}',
+  fragmentShader:`uniform float uA;uniform vec3 uColor;varying vec3 vW;varying vec3 vN;void main(){vec3 V=normalize(cameraPosition-vW);float r=pow(1.-abs(dot(normalize(vN),V)),2.6);float a=r*uA;gl_FragColor=vec4(LinearTosRGB(vec4(uColor,1.)).rgb*a,a);}`});
+  const mesh=new THREE.Mesh(shellGeo,m);mesh.renderOrder=70;mesh.visible=false;scene.add(mesh);shells.push({mesh,m,t:1,power:1});}
+let shellIx=0;
+
+// ---------- audio ----------
+let actx=null, master=null, noiseBuf=null;
+let soundOn=true;try{soundOn=localStorage.getItem('bbk-sound')!=='0';}catch(e){}
+function ensureAudio(){
+  if(actx){if(actx.state==='suspended')actx.resume();return;}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  actx=new AC();master=actx.createGain();master.gain.value=0.9;
+  const comp=actx.createDynamicsCompressor();comp.threshold.value=-10;comp.ratio.value=4;master.connect(comp);comp.connect(actx.destination);
+  noiseBuf=actx.createBuffer(1,actx.sampleRate*0.25,actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+}
+function burst(t,filterType,freq,q,gain,decay,attack=0.0006){
+  const src=actx.createBufferSource();src.buffer=noiseBuf;src.playbackRate.value=0.9+Math.random()*0.2;
+  const f=actx.createBiquadFilter();f.type=filterType;f.frequency.value=freq;f.Q.value=q;
+  const g=actx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+attack);g.gain.exponentialRampToValueAtTime(0.0001,t+decay);
+  src.connect(f);f.connect(g);g.connect(master);src.start(t,Math.random()*0.1);src.stop(t+decay+0.05);
+}
+function playPop(intensity,kind){
+  if(!soundOn||!actx)return;
+  const t=actx.currentTime+0.005,I=Math.min(1.7,0.50+intensity);
+  burst(t,'highpass',3500+Math.random()*1800,0.75,0.90*I,0.013,0.00025);  // crisp initial crack
+  burst(t+0.001,'bandpass',1750+Math.random()*950,0.85,0.88*I,0.038,0.0004); // snapping film
+  burst(t+0.002,'lowpass',800,0.65,0.58*I,0.058,0.0004);                 // compressed air
+  const o=actx.createOscillator(),og=actx.createGain();o.type='triangle';
+  o.frequency.setValueAtTime(250,t);o.frequency.exponentialRampToValueAtTime(78,t+0.045);
+  og.gain.setValueAtTime(0.0001,t);og.gain.exponentialRampToValueAtTime(0.18*I,t+0.001);
+  og.gain.exponentialRampToValueAtTime(0.0001,t+0.055);
+  o.connect(og);og.connect(master);o.start(t);o.stop(t+0.065);
+  burst(t+0.012,'highpass',2600,0.6,0.052*I,0.11,0.008);                // brief air tail
+}
+function playCreak(amount){ // soft plastic squeak while stretching
+  if(!soundOn||!actx||amount<0.02)return;const t=actx.currentTime;
+  burst(t,'bandpass',900+amount*2600,8,Math.min(0.06,amount*0.25),0.05,0.01);
+}
+
+
+
+// ---------- UI ----------
+const $=id=>document.getElementById(id);
+const hintEl=$('hint'),renewBtn=$('renew'),seg=$('seg'),countEl=$('count'),leftEl=$('left');
+let count=0;try{count=parseInt(localStorage.getItem('bbk-count')||'0',10)||0;}catch(e){}
+countEl.textContent=count;
+let mode='press';
+const HINTS={press:'뽁뽁이를 꾹 누르고 있어 보세요',pull:'표면을 집어서 원하는 방향으로 끌어당겨 보세요'};
+function remaining(){let n=0;for(const c of cells)if(c.b&&!c.b.popped)n++;return n;}
+function updateUI(){
+  const n=remaining();leftEl.textContent=n;
+  renewBtn.classList.toggle('show',n===0);
+  if(n===0){hintEl.innerHTML='한 장을 다 터트렸어요';return;}
+  hintEl.innerHTML=HINTS[mode]+'<small>빈 곳을 끌면 돌려보고, 휠이나 두 손가락으로 확대해요</small>';
+}
+function setMode(m){mode=m;seg.dataset.mode=m;$('bPress').setAttribute('aria-pressed',m==='press');$('bPull').setAttribute('aria-pressed',m==='pull');updateUI();}
+$('bPress').onclick=()=>setMode('press');$('bPull').onclick=()=>setMode('pull');
+function setSound(on){soundOn=on;try{localStorage.setItem('bbk-sound',on?'1':'0');}catch(e){}const b=$('bSound');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',on?'소리 끄기':'소리 켜기');b.querySelector('.w').style.display=on?'':'none';b.querySelector('.x').style.display=on?'none':'';}
+setSound(soundOn);
+$('bSound').onclick=()=>{ensureAudio();setSound(!soundOn);};
+$('bReset').onclick=()=>resetSheet();renewBtn.onclick=()=>resetSheet();
+const vP=$('vP'),vS=$('vS'),bP=$('bP'),bS=$('bS'),mP=$('mP'),mS=$('mS');
+let dispP=0,dispS=0;
+// ---------- burst strength ----------
+const KPA0=101.3/template.P.Patm;
+const strengthEl=$('strength'),vStr=$('vStr'),tuneEl=$('tune'),bTune=$('bTune'),mkP=$('mkP');
+let strength=0; // fixed at the lightest setting
+let BURST=1,PMAX=16;
+function burstFor(v){return template.P.burstGauge*Math.pow(2,(v-50)/50*0.85);}
+const STR_WORDS=['아주 약하게','약하게','보통','강하게','아주 강하게'];
+function applyStrength(v,save){
+  strength=v;BURST=burstFor(v);PMAX=Math.max(12,BURST*KPA0*1.3);
+  for(const c of cells)if(c.b&&!c.b.popped&&c.jit)c.b.burst=c.jit*BURST;
+  vStr.textContent=STR_WORDS[Math.min(4,Math.floor(v/20.0001))]+' · 약 '+(BURST*KPA0).toFixed(1)+' kPa';
+  mkP.style.left=(BURST*KPA0/PMAX*100).toFixed(1)+'%';
+  strengthEl.value=v;strengthEl.style.setProperty('--p',v+'%');
+  if(save)try{localStorage.setItem('bbk-strength',String(v));}catch(e){}
+}
+applyStrength(strength,false);
+strengthEl.addEventListener('input',()=>applyStrength(parseInt(strengthEl.value,10),true));
+function setTune(open){tuneEl.classList.toggle('open',open);bTune.setAttribute('aria-expanded',open);}
+bTune.onclick=e=>{e.stopPropagation();setTune(!tuneEl.classList.contains('open'));};
+addEventListener('pointerdown',e=>{if(!tuneEl.contains(e.target)&&e.target!==bTune&&!bTune.contains(e.target))setTune(false);});
+addEventListener('keydown',e=>{if(e.code==='Escape')setTune(false);});
+
+// ---------- picking & input ----------
+const ray=new THREE.Raycaster();const ndc=new THREE.Vector2();
+const pickables=[];for(const c of cells)pickables.push(c.front,c.back);
+function setRay(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,camera);}
+function pick(x,y){setRay(x,y);const h=ray.intersectObjects(pickables,false);for(const q of h){const c=q.object.userData.cell;if(c.inflateT>0.6)return {hit:q,cell:c};}return null;}
+let press=null, pull=null, orbit=null, pinch=null;
+const pointers=new Map();
+const WAKE_R=BR+FINGER_R+0.15;
+function nearCells(x,z){return cells.filter(c=>Math.hypot(c.x-x,c.z-z)<WAKE_R);}
+function surfaceTop(x,z){const r=FINGER_R;let y0=r+0.015;
+  for(const c of nearCells(x,z)){const b=c.b;const [lx,lz]=toLocal(c,x,z);for(let i=0;i<b.N;i++){const dx=b.pos[i*3]-lx,dz=b.pos[i*3+2]-lz,d2=dx*dx+dz*dz;if(d2<r*r){const y=b.pos[i*3+1]+Math.sqrt(r*r-d2)+0.012;if(y>y0)y0=y;}}}
+  return y0;}
+function startPress(cell,wx,wz,sy){
+  let lx=wx-cell.x,lz=wz-cell.z;const rl=Math.hypot(lx,lz);if(rl>0.8){lx*=0.8/rl;lz*=0.8/rl;}
+  const x=cell.x+lx,z=cell.z+lz;const y0=surfaceTop(x,z);
+  press={x,z,y0,y:y0+0.25,hold:0,sy,dy:0,active:true,autoFinish:true,alpha:press?press.alpha:0,cell};focus=cell;
+}
+function startPull(cell,local,worldPt){
+  const b=cell.b;const rad=0.32;const ids=[],offs=[],w=[];
+  for(let i=0;i<b.N;i++){if(b.pinned[i])continue;const dx=b.pos[i*3]-local.x,dy=b.pos[i*3+1]-local.y,dz=b.pos[i*3+2]-local.z;const d=Math.hypot(dx,dy,dz);
+    if(d<rad){ids.push(i);offs.push(dx,dy,dz);const u=d/rad;w.push(u<0.45?1:0.05*Math.pow(1-(u-0.45)/0.55,2));}}
+  if(!ids.length)return false;
+  const n=new THREE.Vector3();camera.getWorldDirection(n);
+  pull={cell,origin:local.clone(),desired:local.clone(),plane:new THREE.Plane().setFromNormalAndCoplanarPoint(n,worldPt),age:0,lastStrain:b.maxTotal||0};
+  b.grab={ids,offs:Float32Array.from(offs),w,target:[local.x,local.y,local.z],squeeze:1};focus=cell;
+  return true;
+}
+const tmpV=new THREE.Vector3();
+function movePull(x,y){
+  if(!pull)return;setRay(x,y);if(!ray.ray.intersectPlane(pull.plane,tmpV))return;
+  const l=pull.cell.group.worldToLocal(tmpV.clone());const d=l.clone().sub(pull.origin);if(d.length()>2.6)d.setLength(2.6);
+  pull.desired.copy(pull.origin).add(d);
+}
+function endInteraction(){
+  if(press)press.active=false;
+  if(pull){if(pull.cell.b)pull.cell.b.grab=null;pull.cell.wakeUntil=time+1.6;pull=null;}
+  canvas.classList.remove('grabbing');
+}
+canvas.addEventListener('pointerdown',e=>{
+  ensureAudio();canvas.focus({preventScroll:true});
+  try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){endInteraction();press=null;orbit=null;const [a,b]=[...pointers.values()];pinch={d0:Math.hypot(a.x-b.x,a.y-b.y),dist0:cam.dist};return;}
+  if(pointers.size>2)return;
+  const p=pick(e.clientX,e.clientY);
+  if(p){
+    if(mode==='press'){startPress(p.cell,p.hit.point.x,p.hit.point.z,e.clientY);press.pid=e.pointerId;}
+    else{const local=p.cell.group.worldToLocal(p.hit.point.clone());if(startPull(p.cell,local,p.hit.point)){pull.pid=e.pointerId;canvas.classList.add('grabbing');}}
+  } else orbit={pid:e.pointerId,x:e.clientX,y:e.clientY};
+});
+canvas.addEventListener('pointermove',e=>{
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch&&pointers.size>=2){const [a,b]=[...pointers.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.dist=THREE.MathUtils.clamp(pinch.dist0*pinch.d0/Math.max(d,1),ZMIN,ZMAX);return;}
+  if(orbit&&orbit.pid===e.pointerId){cam.theta-=(e.clientX-orbit.x)*0.006;cam.phi=THREE.MathUtils.clamp(cam.phi+(e.clientY-orbit.y)*0.005,0.12,1.48);orbit.x=e.clientX;orbit.y=e.clientY;return;}
+  if(press&&press.active&&press.pid===e.pointerId)return;
+  if(pull&&pull.pid===e.pointerId){movePull(e.clientX,e.clientY);return;}
+  if(!pointers.size&&e.pointerType==='mouse'){const h=pick(e.clientX,e.clientY);canvas.classList.toggle('can-press',!!h&&mode==='press');canvas.classList.toggle('can-grab',!!h&&mode==='pull');}
+});
+function up(e){pointers.delete(e.pointerId);
+  if(pinch&&pointers.size<2)pinch=null;
+  if(orbit&&orbit.pid===e.pointerId)orbit=null;
+  if((press&&press.pid===e.pointerId)||(pull&&pull.pid===e.pointerId))endInteraction();}
+canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
+canvas.addEventListener('wheel',e=>{e.preventDefault();cam.dist=THREE.MathUtils.clamp(cam.dist*(1+e.deltaY*0.0012),ZMIN,ZMAX);},{passive:false});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+// keyboard: arrows choose a bubble, space presses it
+let kSel={r:1,c:1},spaceDown=false;
+function kCell(){return cells[kSel.r*GRID+kSel.c];}
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.target.tagName==='BUTTON'&&(e.code==='Space'||e.code==='Enter'))return;
+  if(e.code==='KeyR'){resetSheet();}
+  else if(e.code==='Digit1')setMode('press');
+  else if(e.code==='KeyM')setSound(!soundOn);
+  else if(e.code.startsWith('Arrow')){e.preventDefault();const d={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[e.code];kSel.r=(kSel.r+d[0]+GRID)%GRID;kSel.c=(kSel.c+d[1]+GRID)%GRID;focus=kCell();kFlash=1;}
+  else if(e.code==='Space'&&!spaceDown&&!e.repeat){e.preventDefault();ensureAudio();spaceDown=true;const c=kCell();if(!press||!press.active){startPress(c,c.x,c.z,0);press.pid='key';}}
+});
+addEventListener('keyup',e=>{if(e.code==='Space'){spaceDown=false;if(press&&press.pid==='key')press.active=false;}});
+let kFlash=0;
+
+// ---------- pop handling ----------
+function randDir(){const u=Math.random()*2-1,a=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u);return new THREE.Vector3(s*Math.cos(a),u,s*Math.sin(a));}
+function onPop(cell,ev){
+  const g=Math.max(0,ev.gauge);const kind=(pull&&pull.cell===cell)?'pull':'press';
+  playPop(Math.min(1.7,g*0.75),kind);
+  if(navigator.vibrate)try{navigator.vibrate(18);}catch(_){}
+  count++;try{localStorage.setItem('bbk-count',String(count));}catch(_){}
+  countEl.textContent=count;
+  const P=cell.group.localToWorld(new THREE.Vector3(ev.point[0],ev.point[1],ev.point[2]));
+  const n=new THREE.Vector3(ev.normal[0],ev.normal[1],ev.normal[2]).applyQuaternion(cell.group.quaternion);
+  if(press&&press.active&&Math.hypot(press.x-cell.x,press.z-cell.z)<WAKE_R){
+    const side=new THREE.Vector3(P.x-press.x,0,P.z-press.z);if(side.lengthSq()<1e-4)side.set(Math.cos(Math.random()*6.28),0,Math.sin(Math.random()*6.28));side.normalize();n.lerp(side,0.6).normalize();
+  }
+  const power=0.6+Math.min(g,2.4);
+  // Instant outward pressure wave at the moment of failure.
+  fireRings(cell.x,cell.z,g);
+  flash.position.set(P.x,P.y,P.z);flash.intensity=Math.max(flash.intensity,0.6);
+  for(let i=0;i<7;i++){
+    const d=randDir(),v=0.6+Math.random()*1.25;
+    emit(mist,{x:P.x,y:P.y,z:P.z,vx:d.x*v,vy:d.y*v+0.15,vz:d.z*v,
+      age:0,life:0.12+Math.random()*0.15,drag:6,grav:0,s0:0.08+Math.random()*0.05,s1:0.26,
+      alpha:theme.dark?0.32:0.25,fade:1.8,seed:Math.random()});
+  }
+  // sparkles
+  const nSpark=8+Math.round(Math.random()*5);
+  for(let i=0;i<nSpark;i++){const r=randDir();const v=n.clone().multiplyScalar(0.7+Math.random()*0.9).add(r.multiplyScalar(0.35+Math.random()*0.6));
+    emit(spark,{x:P.x,y:P.y,z:P.z,vx:v.x,vy:v.y+0.3,vz:v.z,age:0,life:0.25+Math.random()*0.3,drag:3,grav:-3.5,s0:0.035+Math.random()*0.025,s1:0.015,alpha:theme.dark?0.85:0.75,fade:1.2,seed:Math.random()});}
+  cell.wakeUntil=time+2.5;
+  updateUI();leftEl.classList.remove('bump');void leftEl.offsetWidth;leftEl.classList.add('bump');
+}
+
+// ---------- resize ----------
+function resize(){
+  const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.setViewOffset(w,h,0,Math.round(h*0.045),w,h);camera.updateProjectionMatrix();
+  const sc=h*renderer.getPixelRatio()/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov)/2));
+  mist.m.uniforms.uScale.value=sc;spark.m.uniforms.uScale.value=sc;
+}
+addEventListener('resize',resize);
+
+function applyTheme(){
+  readTheme();paintBg();buildEnv();
+  mist.m.uniforms.uColor.value=lin(theme.mist);spark.m.uniforms.uColor.value=lin(theme.spark).multiplyScalar(theme.dark?1.6:1);spark.m.blending=theme.dark?THREE.AdditiveBlending:THREE.NormalBlending;spark.m.needsUpdate=true;
+  presserUniforms.uBody.value.copy(theme.dark?new THREE.Color(0.78,0.82,0.9):new THREE.Color(0.36,0.41,0.5));
+  ringColor.value=lin(theme.ring);shellColor.value=lin(theme.ring);
+  hemi.intensity=theme.dark?0.35:0.55;sun.intensity=theme.dark?1.0:1.25;
+  sharedU.uGain.value=theme.dark?1.15:1.0;filmMat.opacity=theme.dark?0.16:0.42;sealMat.opacity=theme.dark?0.14:0.28;
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// ---------- main loop ----------
+let last=performance.now(), time=0, creakAcc=0;
+const SIMX=window.__SIMX||1;
+function simStep(dt){
+  // presser control
+  let finger=null;
+  if(press){
+    const bottom=FINGER_R+0.014;
+    // once the bubble bursts the finger follows through to the sheet, even if released right then
+    if(!press.through&&press.cell.b.popped&&press.cell.b.time-press.cell.b.popTime<0.4&&press.y<press.y0+0.01)press.through=true;
+    const pressing=press.active||(press.autoFinish&&!press.cell.b.popped)||(press.through&&!press.throughDone);
+    if(pressing){
+      press.hold+=dt;
+      let g=0;for(const c of nearCells(press.x,press.z)){if(!c.b.popped)g=Math.max(g,c.b.gauge/c.b.burst*1.3);}
+      const sv=strength/100;const want=Math.min(1.8,press.hold*(2.0-0.5*sv));
+      const target=press.through?bottom:Math.max(bottom,press.y0-want);
+      const approach=press.y>press.y0+0.002&&!press.through;
+      // approach only down to the surface, then press against the bubble's resistance
+      const sp=approach?10:press.through?7:(3.2-1.0*sv)/(1+Math.max(0,g)*(0.6+0.2*sv));
+      const tgt=approach?Math.max(target,press.y0):target;
+      press.tension=Math.max(0,g);
+      press.y+=THREE.MathUtils.clamp(tgt-press.y,-sp*dt,sp*dt);
+      press.alpha=Math.min(1,press.alpha+dt*5);
+      if(press.through&&press.y<=bottom+0.003){press.bottomT=(press.bottomT||0)+dt;if(press.bottomT>0.15)press.throughDone=true;}
+    }else{press.y+=dt*(2.5+(press.y-press.y0)*3);press.alpha-=dt*2.2;}
+    finger=press;
+    if(!pressing&&press.alpha<=0){press=null;finger=null;}
+  }
+  if(pull&&pull.cell.b.grab){
+    pull.age+=dt;const g=pull.cell.b.grab;const k=1-Math.exp(-dt*16);
+    g.target[0]+=(pull.desired.x-g.target[0])*k;g.target[1]+=(pull.desired.y-g.target[1])*k;g.target[2]+=(pull.desired.z-g.target[2])*k;
+    g.squeeze=Math.max(0.6,g.squeeze-dt*2.2);
+  }
+  for(const c of cells){
+    const b=c.b;
+    const near=finger&&Math.hypot(finger.x-c.x,finger.z-c.z)<WAKE_R&&finger.y-FINGER_R<1.3;
+    if(near){const [lx,lz]=toLocal(c,finger.x,finger.z);b.finger={x:lx,y:finger.y,z:lz,r:FINGER_R,len:3};c.wakeUntil=time+1.6;}
+    else b.finger=null;
+    if(b.grab)c.wakeUntil=time+1.6;
+    if(time<c.wakeUntil){
+      b.step(dt);c.dirtyMesh=true;
+      if(b.trisDirty)rebuildIndex(c);
+      for(const ev of b.events){if(ev.type==='pop')onPop(c,ev);}b.events.length=0;
+      if(time+dt>=c.wakeUntil)b.vel.fill(0);
+    }
+  }
+}
+const camPos=new THREE.Vector3();const order=[];
+function frame(now){
+  const rawDt=Math.max(0,(now-last)/1000);const dt=Math.min(0.033,rawDt);last=now;time+=dt;
+  for(let q=0;q<SIMX;q++)simStep(dt);
+  for(const c of cells){
+    const b=c.b;
+    if(c.dirtyMesh){
+      const p=c.posAttr.array,live=b.pos;
+      // Stable pre-burst bulging; on rupture show the snap immediately.
+      const follow=b.popped?1:(1-Math.exp(-dt*28));
+      for(let i=0;i<p.length;i++)p[i]+=(live[i]-p[i])*follow;
+      c.posAttr.needsUpdate=true;c.geo.computeVertexNormals();c.geo.computeBoundingSphere();
+      b.vertexStrain(c.strainBuf);c.strainAttr.needsUpdate=true;
+      let top=0;for(let i=0;i<b.N;i++){const y=b.pos[i*3+1];if(y>top)top=y;}c.top=top;
+      c.dirtyMesh=false;
+    }
+    // entrance
+    if(c.delay>0)c.delay-=Math.min(rawDt,0.1);
+    else if(c.inflateT<1)c.inflateT=Math.min(1,c.inflateT+Math.min(rawDt,0.1)/0.7);
+    const it=c.delay>0?0:c.inflateT;const sy=it>=1?1:1-Math.exp(-9*it)*Math.cos(7*it);const sxz=it>=1?1:0.9+0.1*Math.min(1,it*2.5);
+    c.group.scale.set(sxz,Math.max(0.02,sy),sxz);c.group.visible=it>0;
+    // shadow & caustic
+    const top=c.top*c.group.scale.y;const hf=THREE.MathUtils.clamp(top/0.76,0,1.6);
+    c.contact.scale.setScalar(0.85+hf*0.25);c.contact.material.opacity=(theme.dark?0.9:0.75)*(0.5+0.5*Math.min(1,hf))*(it>0?1:0);
+    const intact=b.popped?Math.max(0.22,1-(b.time-b.popTime)*3):1;
+    c.caustic.material.opacity=(theme.dark?0.42:0.55)*Math.min(1,hf)*intact;
+    c.caustic.position.x=c.x-lightDir.x/lightDir.y*top*0.55;c.caustic.position.z=c.z-lightDir.z/lightDir.y*top*0.55;c.caustic.scale.setScalar(0.65+hf*0.45);
+    c.uPop.value*=Math.exp(-dt*7);
+    const inflation=!b.popped&&time<c.wakeUntil?Math.max(0,Math.min(1.1,b.gauge/(b.burst*2.0))):0;
+    c.uTension.value+=(inflation-c.uTension.value)*Math.min(1,dt*(b.popped?32:9));
+    if(!b.popped&&time<c.wakeUntil){const q=b.gauge/(b.burst*1.6);if(q>0.72)c.uPop.value=Math.max(c.uPop.value,(q-0.72)*0.3);}
+  }
+  // keyboard selection glint
+  if(kFlash>0){kFlash=Math.max(0,kFlash-dt*1.5);const c=kCell();c.uPop.value=Math.max(c.uPop.value,kFlash*0.35);}
+  // squeak while squeezing
+  // Quiet, smooth compression: reserve the hard sound for membrane rupture.
+  // creak while stretching
+  if(pull&&!pull.cell.b.popped){const b=pull.cell.b;const ds=b.maxTotal-pull.lastStrain;pull.lastStrain=b.maxTotal;creakAcc+=dt;if(ds>0.004&&creakAcc>0.06){creakAcc=0;playCreak(Math.min(0.3,ds*6)*Math.min(1,b.maxTotal*3));}}
+  // presser visual
+  if(press){presser.visible=true;presser.position.set(press.x,press.y,press.z);presserUniforms.uAlpha.value=Math.max(0,press.alpha);presserUniforms.uTipY.value=press.y-FINGER_R;
+    const hgt=Math.max(0,press.y-FINGER_R);presserShadow.position.x=press.x-lightDir.x/lightDir.y*hgt*0.5;presserShadow.position.z=press.z-lightDir.z/lightDir.y*hgt*0.5;
+    presserShadow.scale.setScalar(1.7+hgt*0.9);presserShadow.material.opacity=Math.max(0,press.alpha)*(theme.dark?0.9:0.55)/(1+hgt*1.2);}
+  else {presser.visible=false;presserShadow.material.opacity=0;}
+  // pinch tips
+  if(pull&&pull.cell.b.grab){
+    const g=pull.cell.b.grab;const c=pull.cell.group.localToWorld(new THREE.Vector3(g.target[0],g.target[1],g.target[2]));
+    const right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);const toCam=camera.position.clone().sub(c).normalize();
+    const gap=0.13+0.1*(g.squeeze-0.6)/0.4+0.03;
+    tipA.position.copy(c).addScaledVector(right,gap).addScaledVector(toCam,0.04);tipB.position.copy(c).addScaledVector(right,-gap).addScaledVector(toCam,0.04);
+    tipA.visible=tipB.visible=true;tipUniforms.uAlpha.value=Math.min(1.4,tipUniforms.uAlpha.value+dt*6);
+  } else {tipUniforms.uAlpha.value=Math.max(0,tipUniforms.uAlpha.value-dt*5);if(tipUniforms.uAlpha.value<=0)tipA.visible=tipB.visible=false;}
+  // effects
+  updateSystem(mist,dt,time);updateSystem(spark,dt,time);
+  for(const r of rings){if(r.t>=1){r.mesh.visible=false;continue;}if(r.delay>0){r.delay-=dt;r.m.uniforms.uAlpha.value=0;continue;}r.t=Math.min(1,r.t+dt/r.dur);r.m.uniforms.uT.value=r.t;r.m.uniforms.uAlpha.value=r.alpha;}
+  for(const sh of shells){if(sh.t>=1){sh.mesh.visible=false;continue;}sh.t=Math.min(1,sh.t+dt/0.42);const e=1-Math.pow(1-sh.t,3);sh.mesh.scale.setScalar(0.12+e*(0.7+sh.power*0.35));sh.m.uniforms.uA.value=Math.pow(1-sh.t,1.5)*0.9;}
+  flash.intensity*=Math.exp(-dt*14);
+  // camera
+  const d=cam.dist*Math.max(1,1.0/camera.aspect);
+  camera.position.set(cam.target.x+d*Math.cos(cam.phi)*Math.sin(cam.theta),cam.target.y+d*Math.sin(cam.phi),cam.target.z+d*Math.cos(cam.phi)*Math.cos(cam.theta));
+  camera.lookAt(cam.target);
+  // transparent sort: far bubbles first, each back face before its front face
+  camPos.copy(camera.position);order.length=0;for(const c of cells)order.push([c.group.position.distanceToSquared(camPos),c]);
+  order.sort((a,b)=>b[0]-a[0]);order.forEach(([,c],k)=>{c.back.renderOrder=10+k*2;c.front.renderOrder=11+k*2;});
+  // meters (bubble being touched, or the last one)
+  const fb=focus&&focus.b;
+  if(fb){if(fb.popped&&fb.popStretch===undefined)fb.popStretch=fb.maxTotal;}
+  const KPA=101.3/template.P.Patm;const kPa=!fb||fb.popped?0:fb.gauge*KPA;const st=!fb?(template.maxTotal||0):fb.popped?fb.popStretch:fb.maxTotal;
+  dispP+=((fb?kPa:template.gauge*KPA)-dispP)*Math.min(1,dt*14);dispS+=(st*100-dispS)*Math.min(1,dt*14);
+  vP.textContent=(Math.abs(dispP)<0.05?'0.0':(dispP>=0?'+':'')+dispP.toFixed(1))+' kPa';
+  vS.textContent=(fb&&fb.popped?'터질 때 ':'')+Math.max(0,dispS).toFixed(0)+'%';
+  bP.style.transform=`scaleX(${THREE.MathUtils.clamp(dispP/PMAX,0,1)})`;bS.style.transform=`scaleX(${THREE.MathUtils.clamp(dispS/45,0,1)})`;
+  mP.classList.toggle('hot',dispP>BURST*KPA0*0.8&&!(fb&&fb.popped));mS.classList.toggle('hot',dispS>24&&!(fb&&fb.popped));
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+if(innerWidth/innerHeight<0.8)cam.theta=0.08;
+resize();applyTheme();resetSheet();setMode('press');
+requestAnimationFrame(t=>{last=t;frame(t);});
+})();
+
+</script>
+</body>
+</html>
