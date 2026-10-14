@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>뽁뽁이</title>
+<script>
+try{
+  const savedTheme=localStorage.getItem('bbk-theme');
+  if(savedTheme==='light'||savedTheme==='dark')document.documentElement.dataset.theme=savedTheme;
+}catch(_){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -38,6 +44,8 @@
   --fx-mist:#CFE0FF; --fx-ring:#BFD4FF; --fx-spark:#FFFFFF; --shadow-op:.45;
   --env-top:#5A6576; --env-mid:#262D38; --env-bottom:#10141A; --box:4.2;
 }
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
@@ -131,6 +139,38 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .fallback{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:24px;font-size:15px;color:var(--ink-2)}
 
+.panel{width:min(380px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:0;border:1px solid var(--glass-line);
+  border-radius:24px;color:var(--ink);background:var(--bg-center);box-shadow:var(--glass-shadow);overflow:hidden;
+  -webkit-user-select:text;user-select:text}
+.panel::backdrop{background:rgba(15,23,35,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 8px 24px;gap:12px}
+.panel-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.panel-head .icon{width:36px;height:36px;flex:none}
+.panel-body{padding:8px 24px 24px}
+.achievement-summary{padding:0 24px 18px}
+.achievement-summary p{margin:0 0 12px;font-size:12px;color:var(--ink-2);line-height:1.6}
+.achievement-summary progress{display:block;width:100%;height:5px;border:0;border-radius:999px;overflow:hidden;background:var(--track);accent-color:var(--air)}
+.achievement-summary progress::-webkit-progress-bar{background:var(--track)}
+.achievement-summary progress::-webkit-progress-value{background:var(--air);border-radius:999px}
+.achievement-summary progress::-moz-progress-bar{background:var(--air);border-radius:999px}
+.achievement-list{list-style:none;margin:0;padding:0 24px 18px;max-height:min(48dvh,380px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.achievement{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--track)}
+.achievement-badge{width:36px;height:36px;display:grid;place-items:center;flex:none;border-radius:12px;background:var(--track);color:var(--ink-3)}
+.achievement-badge svg{width:18px;height:18px}
+.achievement.unlocked .achievement-badge{background:color-mix(in srgb,var(--air) 12%,transparent);color:var(--air)}
+.achievement-copy{flex:1;min-width:0}
+.achievement-copy strong{display:block;font-size:13px;font-weight:500}
+.achievement-copy small{display:block;margin-top:3px;font-size:11.5px;color:var(--ink-2)}
+.achievement-state{font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.achievement.unlocked .achievement-state,.icon.has-achievements{color:var(--air)}
+.setting-row{margin:0;padding:16px 0;border:0;border-top:1px solid var(--track)}
+.setting-row legend{float:left;width:100%;padding:0;margin-bottom:12px;font-size:13px;font-weight:500}
+.choices{display:flex;clear:both;gap:4px;padding:4px;background:var(--track);border-radius:12px}
+.choices button{flex:1;padding:9px 12px;font-size:12.5px;border-radius:9px;color:var(--ink-2)}
+.choices button[aria-pressed="true"]{background:var(--seg-active);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.toast{position:fixed;z-index:2;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 94px);transform:translateX(-50%);
+  width:max-content;max-width:calc(100vw - 32px);padding:12px 18px;border:1px solid var(--glass-line);border-radius:16px;
+  background:var(--bg-center);box-shadow:var(--glass-shadow);font-size:12.5px;text-align:center;pointer-events:none}
 @media (max-width:520px){
   .top{padding-left:16px;padding-right:16px}
   .meters{padding:11px 13px;gap:10px}
@@ -151,9 +191,9 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
 
 <header class="top">
   <div class="brand">
-    <h1>뽁뽁이</h1>
-    <div class="count"><b id="left">100</b>개 남음</div>
-    <div class="count total">지금까지 <span id="count">0</span>개 터트림</div>
+    <h1 data-i18n="appName">뽁뽁이</h1>
+    <div class="count"><b id="left">100</b><span data-i18n="remaining">개 남음</span></div>
+    <div class="count total"><span data-i18n="totalPrefix">지금까지 </span><span id="count">0</span><span data-i18n="totalSuffix">개 터트림</span></div>
   </div>
   <section class="meters" hidden aria-label="마지막으로 만진 뽁뽁이 상태">
     <div class="meter" id="mP"><span>내부 압력</span><output id="vP">+0.0 kPa</output><div class="bar"><i id="bP"></i><u id="mkP" style="left:73%" title="이쯤에서 터져요"></u></div></div>
@@ -162,17 +202,17 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
   <details class="help" id="help">
     <summary aria-label="조작 안내" title="조작 안내"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="7.2"/><path d="M7.9 7.3a2.1 2.1 0 0 1 4.2 0c0 1.5-2.1 1.7-2.1 3.2"/><path d="M10 13.4h.01"/></svg></summary>
     <div class="help-panel">
-      <h2>조작 안내</h2>
+      <h2 data-i18n="help">조작 안내</h2>
       <dl>
-        <dt>회전</dt><dd>빈 곳을 누른 채 끌기</dd>
-        <dt>확대·축소</dt><dd>마우스 휠 또는<br>두 손가락을 벌리거나 모으기</dd>
+        <dt data-i18n="rotate">회전</dt><dd data-i18n="rotateHint">빈 곳을 누른 채 끌기</dd>
+        <dt data-i18n="zoom">확대·축소</dt><dd data-i18n="zoomHint">마우스 휠 또는 두 손가락을 벌리거나 모으기</dd>
       </dl>
     </div>
   </details>
 </header>
 
 <footer class="bottom">
-  <button class="renew" id="renew" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>새 시트 깔기</button>
+  <button class="renew" id="renew" type="button"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg><span data-i18n="newSheet">새 시트 깔기</span></button>
   <div class="tune" id="tune" hidden>
     <div class="tune-head"><label for="strength">터지는 강도</label><output id="vStr" for="strength">보통</output></div>
     <input type="range" id="strength" min="0" max="100" step="1" value="50">
@@ -188,19 +228,129 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
     <button class="icon" type="button" id="bTune" hidden aria-label="터지는 강도" aria-expanded="false" aria-controls="tune" title="터지는 강도"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 6h7M14.5 6h2M3.5 14h2M9.5 14h7"/><circle cx="12.5" cy="6" r="2"/><circle cx="7.5" cy="14" r="2"/></svg></button>
     <button class="icon" type="button" id="bSound" aria-label="소리 끄기" aria-pressed="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h3l4-3.5v12l-4-3.5h-3z"/><path class="w" d="M13.5 7.2a4 4 0 0 1 0 5.6M15.6 5a7 7 0 0 1 0 10"/><path class="x" d="M13.5 8l4 4M17.5 8l-4 4" style="display:none"/></svg></button>
     <button class="icon" type="button" id="bReset" aria-label="새 시트 깔기" title="새 시트 깔기 (R)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.5A6.5 6.5 0 1 0 16.5 10"/><path d="M16 2.8v3.9h-3.9"/></svg></button>
+    <button class="icon" type="button" id="bAchievements" aria-label="도전과제" title="도전과제" aria-haspopup="dialog" aria-controls="achievements"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8v5a4 4 0 0 1-8 0V3Z"/><path d="M6 4H3v2a3 3 0 0 0 3 3m8-5h3v2a3 3 0 0 1-3 3M10 12v4m-3 1h6"/></svg></button>
+    <button class="icon" type="button" id="bSettings" aria-label="설정" title="설정" aria-haspopup="dialog" aria-controls="settings"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.5 2.5-.5 2-1.4.8-2-.6-1.5 2.6 1.5 1.4v1.6l-1.5 1.4 1.5 2.6 2-.6 1.4.8.5 2h3l.5-2 1.4-.8 2 .6 1.5-2.6-1.5-1.4V8.7l1.5-1.4-1.5-2.6-2 .6-1.4-.8-.5-2h-3Z"/><circle cx="10" cy="9.5" r="2.7"/></svg></button>
   </div>
 </footer>
 
+<dialog class="panel" id="achievements" aria-labelledby="achievementTitle">
+  <div class="panel-head"><h2 id="achievementTitle" data-i18n="achievements">도전과제</h2><button class="icon" type="button" data-close="achievements" aria-label="닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 8 8M14 6l-8 8"/></svg></button></div>
+  <div class="achievement-summary"><p id="achievementSummary"></p><progress id="achievementProgress" max="1000" value="0" aria-label="다음 도전과제 진행도"></progress></div>
+  <ol class="achievement-list" id="achievementList" tabindex="0" aria-label="도전과제 목록"></ol>
+</dialog>
+<dialog class="panel" id="settings" aria-labelledby="settingsTitle">
+  <div class="panel-head"><h2 id="settingsTitle" data-i18n="settings">설정</h2><button class="icon" type="button" data-close="settings" aria-label="닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 8 8M14 6l-8 8"/></svg></button></div>
+  <div class="panel-body">
+    <fieldset class="setting-row"><legend data-i18n="language">언어</legend><div class="choices">
+      <button type="button" data-language="ko" lang="ko" aria-pressed="true">KR</button>
+      <button type="button" data-language="en" lang="en" aria-pressed="false">EN</button>
+    </div></fieldset>
+    <fieldset class="setting-row"><legend data-i18n="appearance">화면 모드</legend><div class="choices">
+      <button type="button" data-theme-choice="light" aria-pressed="true" data-i18n="light">라이트</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false" data-i18n="dark">다크</button>
+    </div></fieldset>
+  </div>
+</dialog>
+<div class="toast" id="achievementToast" role="status" hidden></div>
+
 <script>
-const help=document.getElementById('help');
-addEventListener('pointerdown',event=>{if(!help.contains(event.target))help.open=false;});
-addEventListener('keydown',event=>{
-  if(event.key==='Escape'&&help.open){
-    const hadFocus=help.contains(document.activeElement);
-    help.open=false;
-    if(hadFocus)help.querySelector('summary').focus();
+const BubbleUI=(()=>{
+  const $=id=>document.getElementById(id);
+  const read=(key,fallback)=>{try{return localStorage.getItem(key)??fallback;}catch(_){return fallback;}};
+  const save=(key,value)=>{try{localStorage.setItem(key,String(value));}catch(_){}};
+  const rawCount=Number(read('bbk-count','0'));
+  let count=Number.isSafeInteger(rawCount)&&rawCount>=0?rawCount:0;
+  let language=read('bbk-language','ko')==='en'?'en':'ko';
+  let appearance=read('bbk-theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  if(appearance!=='dark')appearance='light';
+  const words={
+    ko:{appName:'뽁뽁이',remaining:'개 남음',totalPrefix:'지금까지 ',totalSuffix:'개 터트림',help:'조작 안내',rotate:'회전',rotateHint:'빈 곳을 누른 채 끌기',zoom:'확대·축소',zoomHint:'마우스 휠 또는 두 손가락을 벌리거나 모으기',newSheet:'새 시트 깔기',resetTitle:'새 시트 깔기 (R)',soundOn:'소리 켜기',soundOff:'소리 끄기',achievements:'도전과제',settings:'설정',close:'닫기',language:'언어',appearance:'화면 모드',light:'라이트',dark:'다크',achieved:'달성',locked:'미달성',goal:'{goal}개 터트리기',progress:'{current} / {goal}개',summary:'{unlocked} / 100 달성 · 다음 목표 {goal}개',complete:'100 / 100 달성 · 모든 도전과제 완료!',toast:'도전과제 달성 · {goal}개 터트리기',achievementList:'도전과제 목록',nextProgress:'다음 도전과제 진행도',canvas:'뽁뽁이 시트. 눌러서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바를 누르고 있으면 그 뽁뽁이를 누릅니다.',fallback:'이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.',pressure:'내부 압력',stretch:'막 늘어남',meterLabel:'마지막으로 만진 뽁뽁이 상태',strength:'터지는 강도',verySoft:'아주 약하게',soft:'약하게',normal:'보통',firm:'강하게',veryFirm:'아주 강하게',about:'약 ',atPop:'터질 때 ',press:'누르기',pull:'당기기',method:'터트리는 방법',softHint:'살짝 눌러도 톡',firmHint:'꾹 눌러야 펑',burstHint:'이쯤에서 터져요',stretchHint:'이 지점부터 다시 돌아오지 않아요'},
+    en:{appName:'Bubble Wrap',remaining:' left',totalPrefix:'',totalSuffix:' popped in total',help:'Controls',rotate:'Rotate',rotateHint:'Drag an empty area',zoom:'Zoom',zoomHint:'Scroll the mouse wheel or pinch with two fingers',newSheet:'New sheet',resetTitle:'New sheet (R)',soundOn:'Turn sound on',soundOff:'Turn sound off',achievements:'Achievements',settings:'Settings',close:'Close',language:'Language',appearance:'Appearance',light:'Light',dark:'Dark',achieved:'Unlocked',locked:'Locked',goal:'Pop {goal} bubbles',progress:'{current} / {goal} bubbles',summary:'{unlocked} / 100 unlocked · Next: {goal} bubbles',complete:'100 / 100 unlocked · All achievements complete!',toast:'Achievement unlocked · {goal} bubbles popped',achievementList:'Achievement list',nextProgress:'Progress to the next achievement',canvas:'Bubble wrap sheet. Press to pop. Use the arrow keys to select a bubble and hold Space to press it.',fallback:'This browser cannot display 3D graphics (WebGL). Please open this page in a recent version of Chrome, Safari, or Edge.',pressure:'Air pressure',stretch:'Film stretch',meterLabel:'Last touched bubble',strength:'Pop strength',verySoft:'Very soft',soft:'Soft',normal:'Normal',firm:'Firm',veryFirm:'Very firm',about:'about ',atPop:'At pop: ',press:'Press',pull:'Pull',method:'Pop mode',softHint:'A light touch',firmHint:'A firm press',burstHint:'Pops around here',stretchHint:'Permanent stretching starts here'}
+  };
+  function t(key,params={}){return (words[language][key]||key).replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));}
+  const number=value=>value.toLocaleString(language==='ko'?'ko-KR':'en-US');
+  const help=$('help'),achievementDialog=$('achievements'),settingsDialog=$('settings');
+  const trophy=$('bAchievements').querySelector('svg').outerHTML;
+  const rows=[];
+  const fragment=document.createDocumentFragment();
+  for(let goal=1000;goal<=100000;goal+=1000){
+    const row=document.createElement('li');row.className='achievement';row.dataset.goal=goal;
+    const badge=document.createElement('span');badge.className='achievement-badge';badge.innerHTML=trophy;badge.setAttribute('aria-hidden','true');
+    const copy=document.createElement('div');copy.className='achievement-copy';
+    const title=document.createElement('strong'),progress=document.createElement('small');copy.append(title,progress);
+    const state=document.createElement('span');state.className='achievement-state';
+    row.append(badge,copy,state);fragment.append(row);rows.push({goal,row,title,progress,state});
   }
-});
+  $('achievementList').append(fragment);
+  function renderAchievements(){
+    const unlocked=Math.min(100,Math.floor(count/1000)),next=Math.min(100000,(unlocked+1)*1000);
+    $('achievementSummary').textContent=t(unlocked===100?'complete':'summary',{unlocked,goal:number(next)});
+    $('achievementProgress').value=unlocked===100?1000:count%1000;
+    $('achievementProgress').setAttribute('aria-valuetext',unlocked===100?t('complete'):t('progress',{current:number(count),goal:number(next)}));
+    for(const item of rows){
+      const earned=count>=item.goal;
+      item.row.classList.toggle('unlocked',earned);
+      item.title.textContent=t('goal',{goal:number(item.goal)});
+      item.progress.textContent=t('progress',{current:number(Math.min(count,item.goal)),goal:number(item.goal)});
+      item.state.textContent=t(earned?'achieved':'locked');
+    }
+  }
+  let toastTimer,toastGoal=0;
+  function showToast(goal){
+    toastGoal=goal;clearTimeout(toastTimer);
+    $('achievementToast').textContent=t('toast',{goal:number(goal)});$('achievementToast').hidden=false;
+    toastTimer=setTimeout(()=>{$('achievementToast').hidden=true;toastGoal=0;},4500);
+  }
+  function record(nextCount){
+    const previous=count;count=nextCount;save('bbk-count',count);
+    $('count').textContent=number(count);
+    $('bAchievements').classList.toggle('has-achievements',count>=1000);
+    if(achievementDialog.open)renderAchievements();
+    if(Math.floor(count/1000)>Math.floor(previous/1000)&&count<=100000)showToast(Math.floor(count/1000)*1000);
+  }
+  function setAppearance(value){
+    appearance=value;save('bbk-theme',value);document.documentElement.dataset.theme=value;
+    document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeChoice===value));
+  }
+  function setLanguage(value){
+    language=value;save('bbk-language',value);document.documentElement.lang=value;document.title=t('appName');
+    document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+    document.querySelectorAll('[data-language]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.language===value));
+    const labels=[['#scene','canvas'],['#bReset','newSheet'],['#bAchievements','achievements'],['#bSettings','settings'],['.help summary','help'],['#achievementList','achievementList'],['#achievementProgress','nextProgress'],['.meters','meterLabel'],['#bTune','strength'],['#seg','method']];
+    for(const [selector,key] of labels)document.querySelector(selector).setAttribute('aria-label',t(key));
+    document.querySelectorAll('[data-close]').forEach(b=>b.setAttribute('aria-label',t('close')));
+    for(const [selector,key] of [['#bReset','resetTitle'],['#bAchievements','achievements'],['#bSettings','settings'],['.help summary','help'],['#bTune','strength'],['#mkP','burstHint'],['#mS .bar u','stretchHint']])document.querySelector(selector).title=t(key);
+    for(const [selector,key] of [['#fallback','fallback'],['#mP > span','pressure'],['#mS > span','stretch'],['label[for="strength"]','strength'],['#bPress .lbl','press'],['#bPull .lbl','pull'],['.tune-ends span:first-child','softHint'],['.tune-ends span:last-child','firmHint']])document.querySelector(selector).textContent=t(key);
+    const sound=$('bSound');sound.setAttribute('aria-label',t(sound.getAttribute('aria-pressed')==='true'?'soundOff':'soundOn'));sound.title=sound.getAttribute('aria-label');
+    $('count').textContent=number(count);renderAchievements();
+    if(toastGoal)$('achievementToast').textContent=t('toast',{goal:number(toastGoal)});
+    dispatchEvent(new Event('bbk-language-change'));
+  }
+  function openDialog(dialog){
+    help.open=false;
+    if(dialog===achievementDialog)renderAchievements();
+    dialog.showModal();
+  }
+  $('bAchievements').onclick=()=>openDialog(achievementDialog);
+  $('bSettings').onclick=()=>openDialog(settingsDialog);
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+  for(const dialog of [achievementDialog,settingsDialog]){
+    dialog.addEventListener('click',e=>{
+      const bounds=dialog.getBoundingClientRect();
+      if(e.target===dialog&&(e.clientX<bounds.left||e.clientX>bounds.right||e.clientY<bounds.top||e.clientY>bounds.bottom))dialog.close();
+    });
+  }
+  document.querySelectorAll('[data-language]').forEach(b=>b.onclick=()=>setLanguage(b.dataset.language));
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.onclick=()=>setAppearance(b.dataset.themeChoice));
+  addEventListener('pointerdown',e=>{if(!help.contains(e.target))help.open=false;});
+  addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&help.open){const hadFocus=help.contains(document.activeElement);help.open=false;if(hadFocus)help.querySelector('summary').focus();}
+  });
+  setAppearance(appearance);setLanguage(language);
+  $('bAchievements').classList.toggle('has-achievements',count>=1000);
+  return {t,record,get count(){return count;}};
+})();
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -822,8 +972,8 @@ function playCreak(amount){ // soft plastic squeak while stretching
 // ---------- UI ----------
 const $=id=>document.getElementById(id);
 const renewBtn=$('renew'),seg=$('seg'),countEl=$('count'),leftEl=$('left');
-let count=0;try{count=parseInt(localStorage.getItem('bbk-count')||'0',10)||0;}catch(e){}
-countEl.textContent=count;
+let count=BubbleUI.count;
+countEl.textContent=count.toLocaleString(document.documentElement.lang);
 let mode='press';
 function remaining(){let n=0;for(const c of cells)if(c.b&&!c.b.popped)n++;return n;}
 function updateUI(){
@@ -832,7 +982,7 @@ function updateUI(){
 }
 function setMode(m){mode=m;seg.dataset.mode=m;$('bPress').setAttribute('aria-pressed',m==='press');$('bPull').setAttribute('aria-pressed',m==='pull');updateUI();}
 $('bPress').onclick=()=>setMode('press');$('bPull').onclick=()=>setMode('pull');
-function setSound(on){soundOn=on;try{localStorage.setItem('bbk-sound',on?'1':'0');}catch(e){}const b=$('bSound');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',on?'소리 끄기':'소리 켜기');b.querySelector('.w').style.display=on?'':'none';b.querySelector('.x').style.display=on?'none':'';}
+function setSound(on){soundOn=on;try{localStorage.setItem('bbk-sound',on?'1':'0');}catch(e){}const b=$('bSound');b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',BubbleUI.t(on?'soundOff':'soundOn'));b.title=BubbleUI.t(on?'soundOff':'soundOn');b.querySelector('.w').style.display=on?'':'none';b.querySelector('.x').style.display=on?'none':'';}
 setSound(soundOn);
 $('bSound').onclick=()=>{ensureAudio();setSound(!soundOn);};
 $('bReset').onclick=()=>resetSheet();renewBtn.onclick=()=>resetSheet();
@@ -844,16 +994,17 @@ const strengthEl=$('strength'),vStr=$('vStr'),tuneEl=$('tune'),bTune=$('bTune'),
 let strength=0; // fixed at the lightest setting
 let BURST=1,PMAX=16;
 function burstFor(v){return template.P.burstGauge*Math.pow(2,(v-50)/50*0.85);}
-const STR_WORDS=['아주 약하게','약하게','보통','강하게','아주 강하게'];
+const STR_WORDS=['verySoft','soft','normal','firm','veryFirm'];
 function applyStrength(v,save){
   strength=v;BURST=burstFor(v);PMAX=Math.max(12,BURST*KPA0*1.3);
   for(const c of cells)if(c.b&&!c.b.popped&&c.jit)c.b.burst=c.jit*BURST;
-  vStr.textContent=STR_WORDS[Math.min(4,Math.floor(v/20.0001))]+' · 약 '+(BURST*KPA0).toFixed(1)+' kPa';
+  vStr.textContent=BubbleUI.t(STR_WORDS[Math.min(4,Math.floor(v/20.0001))])+' · '+BubbleUI.t('about')+(BURST*KPA0).toFixed(1)+' kPa';
   mkP.style.left=(BURST*KPA0/PMAX*100).toFixed(1)+'%';
   strengthEl.value=v;strengthEl.style.setProperty('--p',v+'%');
   if(save)try{localStorage.setItem('bbk-strength',String(v));}catch(e){}
 }
 applyStrength(strength,false);
+addEventListener('bbk-language-change',()=>{setSound(soundOn);applyStrength(strength,false);});
 strengthEl.addEventListener('input',()=>applyStrength(parseInt(strengthEl.value,10),true));
 function setTune(open){tuneEl.classList.toggle('open',open);bTune.setAttribute('aria-expanded',open);}
 bTune.onclick=e=>{e.stopPropagation();setTune(!tuneEl.classList.contains('open'));};
@@ -929,7 +1080,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let kSel={r:1,c:1},spaceDown=false;
 function kCell(){return cells[kSel.r*GRID+kSel.c];}
 addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT')return;
+  if(document.querySelector('dialog[open]')||e.target.closest('input, select, textarea'))return;
   if(e.target.closest('button, summary')&&(e.code==='Space'||e.code==='Enter'))return;
   if(e.code==='KeyR'){resetSheet();}
   else if(e.code==='Digit1')setMode('press');
@@ -946,8 +1097,7 @@ function onPop(cell,ev){
   const g=Math.max(0,ev.gauge);const kind=(pull&&pull.cell===cell)?'pull':'press';
   playPop(Math.min(1.7,g*0.75),kind);
   if(navigator.vibrate)try{navigator.vibrate(18);}catch(_){}
-  count++;try{localStorage.setItem('bbk-count',String(count));}catch(_){}
-  countEl.textContent=count;
+  count++;BubbleUI.record(count);
   const P=cell.group.localToWorld(new THREE.Vector3(ev.point[0],ev.point[1],ev.point[2]));
   const n=new THREE.Vector3(ev.normal[0],ev.normal[1],ev.normal[2]).applyQuaternion(cell.group.quaternion);
   if(press&&press.active&&Math.hypot(press.x-cell.x,press.z-cell.z)<WAKE_R){
@@ -1106,7 +1256,7 @@ function frame(now){
   const KPA=101.3/template.P.Patm;const kPa=!fb||fb.popped?0:fb.gauge*KPA;const st=!fb?(template.maxTotal||0):fb.popped?fb.popStretch:fb.maxTotal;
   dispP+=((fb?kPa:template.gauge*KPA)-dispP)*Math.min(1,dt*14);dispS+=(st*100-dispS)*Math.min(1,dt*14);
   vP.textContent=(Math.abs(dispP)<0.05?'0.0':(dispP>=0?'+':'')+dispP.toFixed(1))+' kPa';
-  vS.textContent=(fb&&fb.popped?'터질 때 ':'')+Math.max(0,dispS).toFixed(0)+'%';
+  vS.textContent=(fb&&fb.popped?BubbleUI.t('atPop'):'')+Math.max(0,dispS).toFixed(0)+'%';
   bP.style.transform=`scaleX(${THREE.MathUtils.clamp(dispP/PMAX,0,1)})`;bS.style.transform=`scaleX(${THREE.MathUtils.clamp(dispS/45,0,1)})`;
   mP.classList.toggle('hot',dispP>BURST*KPA0*0.8&&!(fb&&fb.popped));mS.classList.toggle('hot',dispS>24&&!(fb&&fb.popped));
   renderer.render(scene,camera);
