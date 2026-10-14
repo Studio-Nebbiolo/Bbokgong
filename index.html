@@ -204,7 +204,7 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
     <div class="help-panel">
       <h2 data-i18n="help">조작 안내</h2>
       <dl>
-        <dt data-i18n="popLabel">터뜨리기</dt><dd data-i18n="popHint">클릭하거나 뽁뽁이 위로 드래그</dd>
+        <dt data-i18n="popLabel">터뜨리기</dt><dd data-i18n="popHint">뽁뽁이를 클릭하기</dd>
         <dt data-i18n="rotate">회전</dt><dd data-i18n="rotateHint">빈 곳을 누른 채 끌기</dd>
         <dt data-i18n="zoom">확대·축소</dt><dd data-i18n="zoomHint">마우스 휠 또는 두 손가락을 벌리거나 모으기</dd>
       </dl>
@@ -265,8 +265,8 @@ const BubbleUI=(()=>{
   let appearance=read('bbk-theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   if(appearance!=='dark')appearance='light';
   const words={
-    ko:{appName:'뽁뽁이 공장',remaining:'개 남음',totalPrefix:'지금까지 ',totalSuffix:'개 터트림',help:'조작 안내',popLabel:'터뜨리기',popHint:'클릭하거나 뽁뽁이 위로 드래그',rotate:'회전',rotateHint:'빈 곳을 누른 채 끌기',zoom:'확대·축소',zoomHint:'마우스 휠 또는 두 손가락을 벌리거나 모으기',newSheet:'새 시트 깔기',resetTitle:'새 시트 깔기 (R)',soundOn:'소리 켜기',soundOff:'소리 끄기',achievements:'도전과제',settings:'설정',close:'닫기',language:'언어',appearance:'화면 모드',light:'라이트',dark:'다크',achieved:'달성',locked:'미달성',goal:'{goal}개 터트리기',progress:'{current} / {goal}개',summary:'{unlocked} / 100 달성 · 다음 목표 {goal}개',complete:'100 / 100 달성 · 모든 도전과제 완료!',toast:'도전과제 달성 · {goal}개 터트리기',achievementList:'도전과제 목록',nextProgress:'다음 도전과제 진행도',canvas:'뽁뽁이 시트. 클릭하거나 누른 채 드래그해서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바로 터트릴 수 있습니다.',fallback:'이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.',pressure:'내부 압력',stretch:'막 늘어남',meterLabel:'마지막으로 만진 뽁뽁이 상태',strength:'터지는 강도',verySoft:'아주 약하게',soft:'약하게',normal:'보통',firm:'강하게',veryFirm:'아주 강하게',about:'약 ',atPop:'터질 때 ',press:'누르기',pull:'당기기',method:'터트리는 방법',softHint:'살짝 눌러도 톡',firmHint:'꾹 눌러야 펑',burstHint:'이쯤에서 터져요',stretchHint:'이 지점부터 다시 돌아오지 않아요'},
-    en:{appName:'Bubble Wrap Factory',remaining:' left',totalPrefix:'',totalSuffix:' popped in total',help:'Controls',popLabel:'Pop',popHint:'Click or drag across bubbles',rotate:'Rotate',rotateHint:'Drag an empty area',zoom:'Zoom',zoomHint:'Scroll the mouse wheel or pinch with two fingers',newSheet:'New sheet',resetTitle:'New sheet (R)',soundOn:'Turn sound on',soundOff:'Turn sound off',achievements:'Achievements',settings:'Settings',close:'Close',language:'Language',appearance:'Appearance',light:'Light',dark:'Dark',achieved:'Unlocked',locked:'Locked',goal:'Pop {goal} bubbles',progress:'{current} / {goal} bubbles',summary:'{unlocked} / 100 unlocked · Next: {goal} bubbles',complete:'100 / 100 unlocked · All achievements complete!',toast:'Achievement unlocked · {goal} bubbles popped',achievementList:'Achievement list',nextProgress:'Progress to the next achievement',canvas:'Bubble wrap sheet. Click or drag across bubbles to pop. Use the arrow keys to select a bubble and Space to pop it.',fallback:'This browser cannot display 3D graphics (WebGL). Please open this page in a recent version of Chrome, Safari, or Edge.',pressure:'Air pressure',stretch:'Film stretch',meterLabel:'Last touched bubble',strength:'Pop strength',verySoft:'Very soft',soft:'Soft',normal:'Normal',firm:'Firm',veryFirm:'Very firm',about:'about ',atPop:'At pop: ',press:'Press',pull:'Pull',method:'Pop mode',softHint:'A light touch',firmHint:'A firm press',burstHint:'Pops around here',stretchHint:'Permanent stretching starts here'}
+    ko:{appName:'뽁뽁이 공장',remaining:'개 남음',totalPrefix:'지금까지 ',totalSuffix:'개 터트림',help:'조작 안내',popLabel:'터뜨리기',popHint:'뽁뽁이를 클릭하기',rotate:'회전',rotateHint:'빈 곳을 누른 채 끌기',zoom:'확대·축소',zoomHint:'마우스 휠 또는 두 손가락을 벌리거나 모으기',newSheet:'새 시트 깔기',resetTitle:'새 시트 깔기 (R)',soundOn:'소리 켜기',soundOff:'소리 끄기',achievements:'도전과제',settings:'설정',close:'닫기',language:'언어',appearance:'화면 모드',light:'라이트',dark:'다크',achieved:'달성',locked:'미달성',goal:'{goal}개 터트리기',progress:'{current} / {goal}개',summary:'{unlocked} / 100 달성 · 다음 목표 {goal}개',complete:'100 / 100 달성 · 모든 도전과제 완료!',toast:'도전과제 달성 · {goal}개 터트리기',achievementList:'도전과제 목록',nextProgress:'다음 도전과제 진행도',canvas:'뽁뽁이 시트. 클릭해서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바로 터트릴 수 있습니다.',fallback:'이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.',pressure:'내부 압력',stretch:'막 늘어남',meterLabel:'마지막으로 만진 뽁뽁이 상태',strength:'터지는 강도',verySoft:'아주 약하게',soft:'약하게',normal:'보통',firm:'강하게',veryFirm:'아주 강하게',about:'약 ',atPop:'터질 때 ',press:'누르기',pull:'당기기',method:'터트리는 방법',softHint:'살짝 눌러도 톡',firmHint:'꾹 눌러야 펑',burstHint:'이쯤에서 터져요',stretchHint:'이 지점부터 다시 돌아오지 않아요'},
+    en:{appName:'Bubble Wrap Factory',remaining:' left',totalPrefix:'',totalSuffix:' popped in total',help:'Controls',popLabel:'Pop',popHint:'Click a bubble',rotate:'Rotate',rotateHint:'Drag an empty area',zoom:'Zoom',zoomHint:'Scroll the mouse wheel or pinch with two fingers',newSheet:'New sheet',resetTitle:'New sheet (R)',soundOn:'Turn sound on',soundOff:'Turn sound off',achievements:'Achievements',settings:'Settings',close:'Close',language:'Language',appearance:'Appearance',light:'Light',dark:'Dark',achieved:'Unlocked',locked:'Locked',goal:'Pop {goal} bubbles',progress:'{current} / {goal} bubbles',summary:'{unlocked} / 100 unlocked · Next: {goal} bubbles',complete:'100 / 100 unlocked · All achievements complete!',toast:'Achievement unlocked · {goal} bubbles popped',achievementList:'Achievement list',nextProgress:'Progress to the next achievement',canvas:'Bubble wrap sheet. Click a bubble to pop it. Use the arrow keys to select a bubble and Space to pop it.',fallback:'This browser cannot display 3D graphics (WebGL). Please open this page in a recent version of Chrome, Safari, or Edge.',pressure:'Air pressure',stretch:'Film stretch',meterLabel:'Last touched bubble',strength:'Pop strength',verySoft:'Very soft',soft:'Soft',normal:'Normal',firm:'Firm',veryFirm:'Very firm',about:'about ',atPop:'At pop: ',press:'Press',pull:'Pull',method:'Pop mode',softHint:'A light touch',firmHint:'A firm press',burstHint:'Pops around here',stretchHint:'Permanent stretching starts here'}
   };
   function t(key,params={}){return (words[language][key]||key).replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));}
   const number=value=>value.toLocaleString(language==='ko'?'ko-KR':'en-US');
@@ -907,7 +907,7 @@ function resetCell(cell,delay){
 }
 let focus=null;
 function resetSheet(){
-  endInteraction();press=null;presses.clear();paint=null;orbit=null;pinch=null;
+  endInteraction();press=null;presses.clear();orbit=null;pinch=null;
   for(const c of cells)resetCell(c,reduceMotion?0:Math.hypot(c.x,c.z)*0.045+Math.random()*0.04);
   focus=null;updateUI();
 }
@@ -1022,7 +1022,7 @@ const ray=new THREE.Raycaster();const ndc=new THREE.Vector2();
 const pickables=[];for(const c of cells)pickables.push(c.front,c.back);
 function setRay(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(ndc,camera);}
 function pick(x,y){setRay(x,y);const h=ray.intersectObjects(pickables,false);for(const q of h){const c=q.object.userData.cell;if(c.inflateT>0.6)return {hit:q,cell:c};}return null;}
-let press=null, pull=null, orbit=null, pinch=null, paint=null;
+let press=null, pull=null, orbit=null, pinch=null;
 const presses=new Map(); // Each clicked bubble finishes independently.
 const pointers=new Map();
 const WAKE_R=BR+FINGER_R+0.15;
@@ -1070,41 +1070,23 @@ canvas.addEventListener('pointerdown',e=>{
   ensureAudio();canvas.focus({preventScroll:true});
   try{canvas.setPointerCapture(e.pointerId);}catch(_){}
   pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(pointers.size===2){endInteraction();cancelPress();paint=null;orbit=null;const [a,b]=[...pointers.values()];pinch={d0:Math.hypot(a.x-b.x,a.y-b.y),dist0:cam.dist};return;}
+  if(pointers.size===2){endInteraction();cancelPress();orbit=null;const [a,b]=[...pointers.values()];pinch={d0:Math.hypot(a.x-b.x,a.y-b.y),dist0:cam.dist};return;}
   if(pointers.size>2)return;
   const p=pick(e.clientX,e.clientY);
   if(p){
-    if(mode==='press'){paint={pid:e.pointerId,x:e.clientX,y:e.clientY,visited:new Set()};paintAt(e.clientX,e.clientY);}
+    if(mode==='press'){if(startPress(p.cell,p.hit.point.x,p.hit.point.z,e.clientY))press.pid=e.pointerId;}
     else{const local=p.cell.group.worldToLocal(p.hit.point.clone());if(startPull(p.cell,local,p.hit.point)){pull.pid=e.pointerId;canvas.classList.add('grabbing');}}
   } else orbit={pid:e.pointerId,x:e.clientX,y:e.clientY};
 });
-function paintAt(x,y){
-  if(!paint)return;
-  const p=pick(x,y);
-  if(!p||paint.visited.has(p.cell))return;
-  paint.visited.add(p.cell);
-  if(startPress(p.cell,p.hit.point.x,p.hit.point.z,y))press.pid=paint.pid;
-}
-function paintTo(x,y){
-  // Sample the entire pointer segment so a fast sweep does not skip bubbles.
-  const x0=paint.x,y0=paint.y,steps=Math.max(1,Math.ceil(Math.hypot(x-x0,y-y0)/6));
-  for(let i=1;i<=steps;i++)paintAt(x0+(x-x0)*i/steps,y0+(y-y0)*i/steps);
-  paint.x=x;paint.y=y;
-}
 canvas.addEventListener('pointermove',e=>{
   if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&pointers.size>=2){const [a,b]=[...pointers.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);cam.dist=THREE.MathUtils.clamp(pinch.dist0*pinch.d0/Math.max(d,1),ZMIN,ZMAX);return;}
   if(orbit&&orbit.pid===e.pointerId){cam.theta-=(e.clientX-orbit.x)*0.006;cam.phi=THREE.MathUtils.clamp(cam.phi+(e.clientY-orbit.y)*0.005,0.12,1.48);orbit.x=e.clientX;orbit.y=e.clientY;return;}
-  if(paint&&paint.pid===e.pointerId){
-    const samples=e.getCoalescedEvents?e.getCoalescedEvents():[];
-    for(const sample of samples)paintTo(sample.clientX,sample.clientY);
-    paintTo(e.clientX,e.clientY);return;
-  }
+  if(press&&press.active&&press.pid===e.pointerId)return;
   if(pull&&pull.pid===e.pointerId){movePull(e.clientX,e.clientY);return;}
   if(!pointers.size&&e.pointerType==='mouse'){const h=pick(e.clientX,e.clientY);canvas.classList.toggle('can-press',!!h&&mode==='press');canvas.classList.toggle('can-grab',!!h&&mode==='pull');}
 });
 function up(e){
-  if(paint&&paint.pid===e.pointerId){if(e.type==='pointerup')paintTo(e.clientX,e.clientY);paint=null;}
   pointers.delete(e.pointerId);
   if(pinch&&pointers.size<2)pinch=null;
   if(orbit&&orbit.pid===e.pointerId)orbit=null;
