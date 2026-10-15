@@ -255,7 +255,7 @@ button:focus-visible{outline:2px solid var(--air);outline-offset:2px}
 
 <dialog class="panel" id="achievements" aria-labelledby="achievementTitle">
   <div class="panel-head"><h2 id="achievementTitle" data-i18n="achievements">도전과제</h2><button class="icon" type="button" data-close="achievements" aria-label="닫기"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 8 8M14 6l-8 8"/></svg></button></div>
-  <div class="achievement-summary"><p id="achievementSummary"></p><progress id="achievementProgress" max="1000" value="0" aria-label="다음 도전과제 진행도"></progress></div>
+  <div class="achievement-summary"><p id="achievementSummary"></p><progress id="achievementProgress" max="200" value="0" aria-label="다음 도전과제 진행도"></progress></div>
   <div class="sheet-current">
     <span class="sheet-preview" id="currentSheetPreview" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <div class="sheet-current-copy"><small data-i18n="currentSheetLabel">사용 중인 시트</small><span id="currentSheetName"></span></div>
@@ -288,27 +288,45 @@ const BubbleUI=(()=>{
   let language=read('bbk-language','ko')==='en'?'en':'ko';
   let appearance=read('bbk-theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   if(appearance!=='dark')appearance='light';
-  // One permanent cosmetic reward for every existing 1,000-pop achievement.
-  const families=[
-    ['소다','Soda',205,75],['복숭아','Peach',22,84],['민트','Mint',154,57],['라벤더','Lavender',268,66],
-    ['벚꽃','Cherry Blossom',337,72],['레몬','Lemon',49,88],['코랄','Coral',8,79],['아쿠아','Aqua',183,74],
-    ['진주','Pearl',225,24],['오로라','Aurora',286,74]
+  const REWARD_STEP=200;
+  const colors=[
+    ['하늘색','Sky Blue','#87ceeb'],['파랑','Blue','#4f8ff7'],
+    ['남색','Navy','#344b8e'],['민트','Mint','#8eddbb'],
+    ['청록','Teal','#40b5ad'],['초록','Green','#65b96d'],
+    ['연두','Yellow Green','#b5d85c'],['라임','Lime','#c9e779'],
+    ['노랑','Yellow','#f5d76b'],['레몬색','Lemon Yellow','#f8ed8c'],
+    ['주황','Orange','#f5a05b'],['복숭아색','Peach','#f6bba1'],
+    ['코랄','Coral','#ef8f83'],['분홍','Pink','#f29dc1'],
+    ['로즈','Rose','#dc7d98'],['라벤더','Lavender','#b5a0e6'],
+    ['보라','Purple','#9f7edb'],['바이올렛','Violet','#bf86dc'],
+    ['라일락','Lilac','#cfb6ec'],['아쿠아','Aqua','#8ee0de'],
+    ['터쿼이즈','Turquoise','#63c7cb'],['파우더 블루','Powder Blue','#bcd4ed'],
+    ['코발트','Cobalt','#5d84d2'],['인디고','Indigo','#7a82ca'],
+    ['페리윙클','Periwinkle','#a6b2ea'],['세이지','Sage','#b1c6a0'],
+    ['올리브','Olive','#b8be7e'],['포레스트 그린','Forest Green','#699f83'],
+    ['에메랄드','Emerald','#63ba9e'],['샤르트뢰즈','Chartreuse','#d4df7c'],
+    ['머스터드','Mustard','#ddb95f'],['앰버','Amber','#f0ba67'],
+    ['살구색','Apricot','#f5c38e'],['샐먼','Salmon','#eb9f99'],
+    ['테라코타','Terracotta','#cc8b79'],['빨강','Red','#e77e7e'],
+    ['버건디','Burgundy','#b66f86'],['마젠타','Magenta','#d082bd'],
+    ['푸시아','Fuchsia','#e089d0'],['모브','Mauve','#bb9dba'],
+    ['플럼','Plum','#9f83b4'],['크림색','Cream','#f1e6c5'],
+    ['아이보리','Ivory','#efe9d7'],['베이지','Beige','#d9c8b2'],
+    ['샌드','Sand','#d6b894'],['토프','Taupe','#bbaaa1'],
+    ['갈색','Brown','#ad8f7b'],['실버','Silver','#bfc6d0'],
+    ['회색','Gray','#a6afba'],['흰색','White','#f4f6fa']
   ];
-  const tones=[['새벽','Dawn'],['아침','Morning'],['햇살','Sunbeam'],['바람','Breeze'],['물결','Ripple'],
-    ['노을','Sunset'],['달빛','Moonlight'],['별빛','Starlight'],['꿈결','Daydream'],['빛무리','Halo']];
-  const sheets=[{id:0,goal:0,color:'#ffffff',amount:0,finish:0}];
-  for(let id=1;id<=100;id++){
-    const family=Math.floor((id-1)/10),tone=(id-1)%10,[,,hue,saturation]=families[family];
-    const h=(hue+(tone-4.5)*(family===9?5:2)+360)%360;
-    sheets.push({id,goal:id*1000,family,tone,color:`hsl(${h}, ${saturation}%, ${76-tone*2}%)`,
-      amount:family===8?.5:.78,finish:family>=8?.55+tone*.045:.04+tone*.025});
-  }
-  const storedSheet=Number(read('bbk-sheet','0'));
+  const rewardCount=colors.length,finalGoal=rewardCount*REWARD_STEP;
+  const sheets=[{id:0,goal:0,color:'#ffffff',amount:0,finish:0},
+    ...colors.map(([ko,en,color],i)=>({id:i+1,goal:(i+1)*REWARD_STEP,name:[ko,en],color,amount:.78,finish:0}))];
+  // Preserve lifetime pops; old cosmetic IDs belong to the replaced catalog.
+  const catalogVersion='colors-200-v1';
+  const storedSheet=read('bbk-sheet-catalog','')===catalogVersion?Number(read('bbk-sheet','0')):0;
   let selectedSheet=Number.isInteger(storedSheet)&&sheets[storedSheet]&&sheets[storedSheet].goal<=count?storedSheet:0;
-  save('bbk-sheet',selectedSheet);
+  save('bbk-sheet',selectedSheet);save('bbk-sheet-catalog',catalogVersion);
   const words={
-    ko:{clearSheet:'기본 투명',currentSheetLabel:'사용 중인 시트',useSheet:'사용하기',usingSheet:'사용 중',sheetLocked:'잠김',backToClear:'기본으로',useSheetLabel:'{sheet} 시트 사용하기',lockedSheetLabel:'{goal}개를 터뜨리면 {sheet} 시트 해금',appName:'뽁뽁이 공장',remaining:'개 남음',totalPrefix:'지금까지 ',totalSuffix:'개 터트림',help:'조작 안내',popLabel:'터뜨리기',popHint:'뽁뽁이를 클릭하기',rotate:'회전',rotateHint:'빈 곳을 누른 채 끌기',zoom:'확대·축소',zoomHint:'마우스 휠 또는 두 손가락을 벌리거나 모으기',newSheet:'새 시트 깔기',resetTitle:'새 시트 깔기 (R)',soundOn:'소리 켜기',soundOff:'소리 끄기',achievements:'도전과제',settings:'설정',close:'닫기',language:'언어',appearance:'화면 모드',light:'라이트',dark:'다크',achieved:'달성',locked:'미달성',goal:'{goal}개 터트리기',progress:'{current} / {goal}개',summary:'{unlocked} / 100 달성 · 다음 목표 {goal}개',complete:'100 / 100 달성 · 모든 도전과제 완료!',toast:'{goal}개 달성 · {sheet} 시트 해금',achievementList:'도전과제 목록',nextProgress:'다음 도전과제 진행도',canvas:'뽁뽁이 시트. 클릭해서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바로 터트릴 수 있습니다.',fallback:'이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.',pressure:'내부 압력',stretch:'막 늘어남',meterLabel:'마지막으로 만진 뽁뽁이 상태',strength:'터지는 강도',verySoft:'아주 약하게',soft:'약하게',normal:'보통',firm:'강하게',veryFirm:'아주 강하게',about:'약 ',atPop:'터질 때 ',press:'누르기',pull:'당기기',method:'터트리는 방법',softHint:'살짝 눌러도 톡',firmHint:'꾹 눌러야 펑',burstHint:'이쯤에서 터져요',stretchHint:'이 지점부터 다시 돌아오지 않아요'},
-    en:{clearSheet:'Classic Clear',currentSheetLabel:'Current sheet',useSheet:'Use',usingSheet:'In use',sheetLocked:'Locked',backToClear:'Classic',useSheetLabel:'Use {sheet} sheet',lockedSheetLabel:'Pop {goal} bubbles to unlock {sheet}',appName:'Bubble Wrap Factory',remaining:' left',totalPrefix:'',totalSuffix:' popped in total',help:'Controls',popLabel:'Pop',popHint:'Click a bubble',rotate:'Rotate',rotateHint:'Drag an empty area',zoom:'Zoom',zoomHint:'Scroll the mouse wheel or pinch with two fingers',newSheet:'New sheet',resetTitle:'New sheet (R)',soundOn:'Turn sound on',soundOff:'Turn sound off',achievements:'Achievements',settings:'Settings',close:'Close',language:'Language',appearance:'Appearance',light:'Light',dark:'Dark',achieved:'Unlocked',locked:'Locked',goal:'Pop {goal} bubbles',progress:'{current} / {goal} bubbles',summary:'{unlocked} / 100 unlocked · Next: {goal} bubbles',complete:'100 / 100 unlocked · All achievements complete!',toast:'{goal} pops · {sheet} sheet unlocked',achievementList:'Achievement list',nextProgress:'Progress to the next achievement',canvas:'Bubble wrap sheet. Click a bubble to pop it. Use the arrow keys to select a bubble and Space to pop it.',fallback:'This browser cannot display 3D graphics (WebGL). Please open this page in a recent version of Chrome, Safari, or Edge.',pressure:'Air pressure',stretch:'Film stretch',meterLabel:'Last touched bubble',strength:'Pop strength',verySoft:'Very soft',soft:'Soft',normal:'Normal',firm:'Firm',veryFirm:'Very firm',about:'about ',atPop:'At pop: ',press:'Press',pull:'Pull',method:'Pop mode',softHint:'A light touch',firmHint:'A firm press',burstHint:'Pops around here',stretchHint:'Permanent stretching starts here'}
+    ko:{clearSheet:'기본 투명',currentSheetLabel:'사용 중인 시트',useSheet:'사용하기',usingSheet:'사용 중',sheetLocked:'잠김',backToClear:'기본으로',useSheetLabel:'{sheet} 시트 사용하기',lockedSheetLabel:'{goal}개를 터뜨리면 {sheet} 시트 해금',appName:'뽁뽁이 공장',remaining:'개 남음',totalPrefix:'지금까지 ',totalSuffix:'개 터트림',help:'조작 안내',popLabel:'터뜨리기',popHint:'뽁뽁이를 클릭하기',rotate:'회전',rotateHint:'빈 곳을 누른 채 끌기',zoom:'확대·축소',zoomHint:'마우스 휠 또는 두 손가락을 벌리거나 모으기',newSheet:'새 시트 깔기',resetTitle:'새 시트 깔기 (R)',soundOn:'소리 켜기',soundOff:'소리 끄기',achievements:'도전과제',settings:'설정',close:'닫기',language:'언어',appearance:'화면 모드',light:'라이트',dark:'다크',achieved:'달성',locked:'미달성',goal:'{goal}개 터트리기',progress:'{current} / {goal}개',summary:'{unlocked} / {total} 달성 · 다음 목표 {goal}개',complete:'{total} / {total} 달성 · 모든 도전과제 완료!',toast:'{goal}개 달성 · {sheet} 시트 해금',achievementList:'도전과제 목록',nextProgress:'다음 도전과제 진행도',canvas:'뽁뽁이 시트. 클릭해서 터트릴 수 있습니다. 방향키로 뽁뽁이를 고르고 스페이스바로 터트릴 수 있습니다.',fallback:'이 브라우저에서는 3D 그래픽(WebGL)을 쓸 수 없어요. 최신 Chrome, Safari, Edge에서 열어주세요.',pressure:'내부 압력',stretch:'막 늘어남',meterLabel:'마지막으로 만진 뽁뽁이 상태',strength:'터지는 강도',verySoft:'아주 약하게',soft:'약하게',normal:'보통',firm:'강하게',veryFirm:'아주 강하게',about:'약 ',atPop:'터질 때 ',press:'누르기',pull:'당기기',method:'터트리는 방법',softHint:'살짝 눌러도 톡',firmHint:'꾹 눌러야 펑',burstHint:'이쯤에서 터져요',stretchHint:'이 지점부터 다시 돌아오지 않아요'},
+    en:{clearSheet:'Classic Clear',currentSheetLabel:'Current sheet',useSheet:'Use',usingSheet:'In use',sheetLocked:'Locked',backToClear:'Classic',useSheetLabel:'Use {sheet} sheet',lockedSheetLabel:'Pop {goal} bubbles to unlock {sheet}',appName:'Bubble Wrap Factory',remaining:' left',totalPrefix:'',totalSuffix:' popped in total',help:'Controls',popLabel:'Pop',popHint:'Click a bubble',rotate:'Rotate',rotateHint:'Drag an empty area',zoom:'Zoom',zoomHint:'Scroll the mouse wheel or pinch with two fingers',newSheet:'New sheet',resetTitle:'New sheet (R)',soundOn:'Turn sound on',soundOff:'Turn sound off',achievements:'Achievements',settings:'Settings',close:'Close',language:'Language',appearance:'Appearance',light:'Light',dark:'Dark',achieved:'Unlocked',locked:'Locked',goal:'Pop {goal} bubbles',progress:'{current} / {goal} bubbles',summary:'{unlocked} / {total} unlocked · Next: {goal} bubbles',complete:'{total} / {total} unlocked · All achievements complete!',toast:'{goal} pops · {sheet} sheet unlocked',achievementList:'Achievement list',nextProgress:'Progress to the next achievement',canvas:'Bubble wrap sheet. Click a bubble to pop it. Use the arrow keys to select a bubble and Space to pop it.',fallback:'This browser cannot display 3D graphics (WebGL). Please open this page in a recent version of Chrome, Safari, or Edge.',pressure:'Air pressure',stretch:'Film stretch',meterLabel:'Last touched bubble',strength:'Pop strength',verySoft:'Very soft',soft:'Soft',normal:'Normal',firm:'Firm',veryFirm:'Very firm',about:'about ',atPop:'At pop: ',press:'Press',pull:'Pull',method:'Pop mode',softHint:'A light touch',firmHint:'A firm press',burstHint:'Pops around here',stretchHint:'Permanent stretching starts here'}
   };
   function t(key,params={}){return (words[language][key]||key).replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));}
   const number=value=>value.toLocaleString(language==='ko'?'ko-KR':'en-US');
@@ -316,9 +334,9 @@ const BubbleUI=(()=>{
   function sheetName(sheet){
     if(sheet.id===0)return t('clearSheet');
     const index=language==='ko'?0:1;
-    return families[sheet.family][index]+' · '+tones[sheet.tone][index];
+    return sheet.name[index];
   }
-  function toastText(goal){return t('toast',{goal:number(goal),sheet:sheetName(sheets[goal/1000])});}
+  function toastText(goal){return t('toast',{goal:number(goal),sheet:sheetName(sheets[goal/REWARD_STEP])});}
   function equipSheet(id){
     const sheet=sheets[id];
     if(!sheet||sheet.goal>count||id===selectedSheet)return;
@@ -340,10 +358,10 @@ const BubbleUI=(()=>{
   }
   $('achievementList').append(fragment);
   function renderAchievements(){
-    const unlocked=Math.min(100,Math.floor(count/1000)),next=Math.min(100000,(unlocked+1)*1000);
-    $('achievementSummary').textContent=t(unlocked===100?'complete':'summary',{unlocked,goal:number(next)});
-    $('achievementProgress').value=unlocked===100?1000:count%1000;
-    $('achievementProgress').setAttribute('aria-valuetext',unlocked===100?t('complete'):t('progress',{current:number(count),goal:number(next)}));
+    const unlocked=Math.min(rewardCount,Math.floor(count/REWARD_STEP)),next=Math.min(finalGoal,(unlocked+1)*REWARD_STEP);
+    $('achievementSummary').textContent=t(unlocked===rewardCount?'complete':'summary',{unlocked,total:rewardCount,goal:number(next)});
+    $('achievementProgress').value=unlocked===rewardCount?REWARD_STEP:count%REWARD_STEP;
+    $('achievementProgress').setAttribute('aria-valuetext',unlocked===rewardCount?t('complete',{total:rewardCount}):t('progress',{current:number(count),goal:number(next)}));
     $('currentSheetName').textContent=sheetName(sheets[selectedSheet]);
     $('currentSheetPreview').style.setProperty('--sheet-color',sheets[selectedSheet].color);
     $('bClearSheet').textContent=t(selectedSheet===0?'usingSheet':'backToClear');
@@ -371,10 +389,10 @@ const BubbleUI=(()=>{
   function record(nextCount){
     const previous=count;count=nextCount;save('bbk-count',count);
     $('count').textContent=number(count);
-    $('bAchievements').classList.toggle('has-achievements',count>=1000);
+    $('bAchievements').classList.toggle('has-achievements',count>=REWARD_STEP);
     if(achievementDialog.open)renderAchievements();
-    const milestone=Math.min(100000,Math.floor(count/1000)*1000);
-    if(milestone>Math.floor(previous/1000)*1000)showToast(milestone);
+    const milestone=Math.min(finalGoal,Math.floor(count/REWARD_STEP)*REWARD_STEP);
+    if(milestone>Math.floor(previous/REWARD_STEP)*REWARD_STEP)showToast(milestone);
   }
   function setAppearance(value){
     appearance=value;save('bbk-theme',value);document.documentElement.dataset.theme=value;
@@ -416,7 +434,7 @@ const BubbleUI=(()=>{
     if(e.key==='Escape'&&help.open){const hadFocus=help.contains(document.activeElement);help.open=false;if(hadFocus)help.querySelector('summary').focus();}
   });
   setAppearance(appearance);setLanguage(language);
-  $('bAchievements').classList.toggle('has-achievements',count>=1000);
+  $('bAchievements').classList.toggle('has-achievements',count>=REWARD_STEP);
   return {t,record,get count(){return count;},get sheet(){return sheets[selectedSheet];}};
 })();
 
